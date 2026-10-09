@@ -5,7 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import subprocess
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 def package(images, output, lock, device_commit, tag, build_url):
@@ -18,16 +19,9 @@ def package(images, output, lock, device_commit, tag, build_url):
     data = json.loads(lock.read_text())
     if data.get("status") != "locked" or data.get("ubuntu_touch") != "24.04" or data.get("device") != "sony-pdx213":
         raise ValueError("A locked Sony Ubuntu Touch 24.04 source manifest is required")
-    sources = data.get("sources", {})
-    if set(sources) != {"kernel", "rootfs", "halium_gsi", "toolchain"}:
-        raise ValueError("Complete source pins required")
-    if not re.fullmatch(r"[0-9a-f]{40}", sources["kernel"].get("commit", "")):
-        raise ValueError("Full kernel commit required")
-    for name, source in sources.items():
-        if not isinstance(source.get("url"), str) or not source["url"].startswith("https://"):
-            raise ValueError("HTTPS source URL required")
-        if name != "kernel" and (not source.get("version") or not re.fullmatch(r"[0-9a-f]{64}", source.get("sha256", ""))):
-            raise ValueError("Version and source checksum required")
+    from sources_lock import validate
+    validate(data)
+    sources = data['sources']
     artifacts = []
     for path in sorted(images.iterdir()):
         if path.is_symlink() or not path.is_file() or not re.fullmatch(re.escape(tag) + r"-[a-z0-9-]+\.img", path.name):

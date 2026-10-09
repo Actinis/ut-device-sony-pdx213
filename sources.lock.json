@@ -1,7 +1,151 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "device": "sony-pdx213",
   "ubuntu_touch": "24.04",
-  "status": "unpopulated",
-  "sources": {}
+  "status": "locked",
+  "sources": {
+    "kernel": {
+      "kind": "git",
+      "url": "https://github.com/Actinis/ut-kernel-sony-msm.git",
+      "commit": "fcc811e81b43986c53504b3acda16468090c9ee4",
+      "branch": "pdx213-halium11-noble",
+      "submodules": {
+        "drivers/staging/wlan-qc/fw-api": {
+          "commit": "7b58b37877560bbb3916a1e73624c045b51ad21a",
+          "url": "https://github.com/sonyxperiadev/vendor-qcom-opensource-wlan-fw-api.git"
+        },
+        "drivers/staging/wlan-qc/qca-wifi-host-cmn": {
+          "commit": "05c0eb422285a2919bff35f89ba29222f095f590",
+          "url": "https://github.com/sonyxperiadev/vendor-qcom-opensource-wlan-qca-wifi-host-cmn.git"
+        },
+        "drivers/staging/wlan-qc/qcacld-3.0": {
+          "commit": "a2e7d7e2ef4fcaf3fc32f62918ec604237cddd92",
+          "url": "https://github.com/sonyxperiadev/vendor-qcom-opensource-wlan-qcacld-3.0.git"
+        },
+        "techpack/audio": {
+          "commit": "a5bc0f922b0750e60a0e118901653c66121d7f98",
+          "url": "https://github.com/sonyxperiadev/kernel-techpack-audio.git"
+        },
+        "techpack/camera": {
+          "commit": "3505c0c6b1044af320a519a8df86a78b529a18d1",
+          "url": "https://github.com/sonyxperiadev/kernel-techpack-camera.git"
+        },
+        "techpack/data-kernel": {
+          "commit": "4e92b589559c082c8c13aae9d6d810097ee3bace",
+          "url": "https://github.com/sonyxperiadev/kernel-techpack-data-kernel.git"
+        },
+        "techpack/display": {
+          "commit": "f123ea13f259e65c7ac0410dd452e40ed582c0f9",
+          "url": "https://github.com/sonyxperiadev/kernel-techpack-display-driver.git"
+        },
+        "techpack/video": {
+          "commit": "d9fc5998882845766d7d37bef1ba5f497b43a212",
+          "url": "https://github.com/sonyxperiadev/kernel-techpack-video.git"
+        },
+        "wireguard-linux-compat": {
+          "commit": "18fbcd68a35a892527345dc5679d0b2d860ee004",
+          "url": "https://github.com/mer-hybris/wireguard-linux-compat.git"
+        }
+      }
+    },
+    "rootfs": {
+      "kind": "artifact",
+      "url": "https://ci.ubports.com/job/ubuntu-touch-rootfs/job/ubports%252F24.04-2.x/121/artifact/ubuntu-touch-android9plus-rootfs-arm64.tar.gz",
+      "version": "Noble 24.04-2.x build 121",
+      "filename": "ubuntu-touch-android9plus-rootfs-arm64.tar.gz",
+      "sha256": "f41c1f8cf2bd717c75f5c5d0d9ff1a1367baef25187c89cf329c91d6456a9df5"
+    },
+    "halium_gsi": {
+      "kind": "artifact",
+      "url": "https://ci.ubports.com/job/UBportsCommunityPortsJenkinsCI/job/ubports%252Fporting%252Fcommunity-ports%252Fjenkins-ci%252Fgeneric_arm64/job/halium-11.0/1575/artifact/halium_halium_arm64.tar.xz",
+      "version": "Halium 11 build 1575",
+      "filename": "halium_halium_arm64.tar.xz",
+      "sha256": "b38dbb367c9dee1c6f9a27cf3901eb4579f9c6341ae35de86bc94f0ecfb844bb"
+    },
+    "initrd": {
+      "kind": "artifact",
+      "url": "https://github.com/Halium/initramfs-tools-halium/releases/download/dynparts/initrd.img-touch-arm64",
+      "version": "dynparts asset; SHA256 authoritative, tag mutable",
+      "filename": "initrd.img-touch-arm64",
+      "sha256": "da1073d025e3ffca88b70463841509260e364771ce0733ed76a0b6eaf7eedc8e"
+    },
+    "mkbootimg": {
+      "kind": "git",
+      "url": "https://github.com/LineageOS/android_system_tools_mkbootimg.git",
+      "commit": "40a19c4c5ffe8b86c6c61318c8aa4ffe35d6e7ad"
+    },
+    "toolchain": {
+      "kind": "artifact",
+      "url": "https://dl.google.com/android/repository/android-ndk-r23b-linux.zip",
+      "version": "Android NDK r23b 23.1.7779620; clang 12.0.8 r416183c1",
+      "filename": "android-ndk-r23b-linux.zip",
+      "sha256": "c6e97f9c8cfe5b7be0a9e6c15af8e7a179475b7ded23e2d1c1fa0945d6fb4382"
+    },
+    "vendor": {
+      "kind": "manual",
+      "url": "https://github.com/mer-hybris/droid-hal-sony-lena",
+      "version": "Android 11 AOSP mer-hybris/Jolla adaptation; independent rebuild pending",
+      "sha256": "5732d6940d564262579609b09e0130aea69ff24c51302325cf51b1d46d65ffeb",
+      "bytes": 134217728,
+      "filename": "vendor.img",
+      "redistribution": "Not bundled; source-build/provenance and redistribution review required",
+      "acquisition": "Supply a independently reviewed matching adaptation image. No public downloadable artifact for this exact file is established."
+    },
+    "sony_oem": {
+      "kind": "manual",
+      "url": "https://opendevices.sony.net/file/download/software-binaries-for-aosp-android-11-0-kernel-4-19-lena",
+      "version": "SW_binaries_for_Xperia_Android_11_4.19_v9a_lena.zip",
+      "sha256": "cff5ba3fc138e08ba170595fe85b9812735929642eb6c04761538328f7b843dc",
+      "bytes": 838860800,
+      "filename": "sony-oem.img",
+      "redistribution": "Excluded; obtain directly from Sony under their EULA",
+      "acquisition": "Qualified hash is the ext4 OEM partition image from the prototype, not a verified hash of the public ZIP. Independently obtained ZIP/image equivalence remains to be qualified; do not force pad/convert merely to match this hash."
+    },
+    "boot_metadata": {
+      "kind": "derived",
+      "dependencies": [],
+      "files": {
+        "device/boot-metadata.json": "1502074e63aa9fb5dad5a88b40c27b0c8769e2ce394d4878806a971bb78bab01"
+      },
+      "description": "Fixed Sony v0 boot header and cmdline; not copied from private boot backup"
+    },
+    "dtb": {
+      "kind": "derived",
+      "dependencies": [
+        "kernel"
+      ],
+      "targets": [
+        "arch/arm64/boot/Image.gz-dtb",
+        "arch/arm64/boot/dtbo.img"
+      ],
+      "description": "Sony pdx213 device tree built from pinned kernel and pinned gitlinks; no binary DTB input"
+    },
+    "auxiliary": {
+      "kind": "derived",
+      "dependencies": [
+        "toolchain"
+      ],
+      "files": {
+        "device/reboot_bootloader.S": "566929e2bb1f149f07d6b56c3bd9381469dc17b4b0eb5b5fedcd2d9ea85754cb",
+        "device/vndservicemanager-apparmor-compat.c": "03201f255b20d66fc9cae97af9a6296da5eb432d7853a5529d1b432cca4f1857"
+      },
+      "description": "Static Linux syscall helper and scoped Android API 30 shared library compiled from tracked sources"
+    },
+    "rootfs_tools": {
+      "kind": "derived",
+      "dependencies": [
+        "rootfs"
+      ],
+      "packages": {
+        "e2fsprogs": "1.47.0-2.4~exp1ubuntu4.1",
+        "libblkid1": "2.39.3-9ubuntu6.6",
+        "libc6": "2.39-0ubuntu8.9",
+        "libcom-err2": "1.47.0-2.4~exp1ubuntu4.1",
+        "libext2fs2t64": "1.47.0-2.4~exp1ubuntu4.1",
+        "libuuid1": "2.39.3-9ubuntu6.6"
+      },
+      "description": "Boot filesystem executables and ELF dependencies extracted only from the locked Noble rootfs"
+    }
+  },
+  "reproducibility": "kernel and boot buildable; full installation requires manual vendor/OEM and independent qualification"
 }

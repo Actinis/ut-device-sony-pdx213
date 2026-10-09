@@ -40,3 +40,5 @@ jobs:
           if [ -d tests ]; then
             python3 -m unittest discover -s tests -v
           fi
+      - name: Test call-audio route regression
+        run: python3 tools/test_call_audio.py

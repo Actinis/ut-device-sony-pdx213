@@ -32,6 +32,7 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--base',type=Path,required=True)
     p.add_argument('--kernel',type=Path,required=True)
+    p.add_argument('--metadata',type=Path,required=True)
     p.add_argument('--init',type=Path,required=True)
     p.add_argument('--extras',type=Path)
     p.add_argument('--mkbootimg',type=Path,required=True)
@@ -58,16 +59,12 @@ def main():
             entries[name]=(mode,data)
     ramdisk=a.output.with_suffix('.initrd.gz')
     ramdisk.write_bytes(archive(entries))
-    cmdline=('lpm_levels.sleep_disabled=1 androidboot.bootdevice=1d84000.ufshc swiotlb=2048 '
-             'service_locator.enable=1 androidboot.selinux=permissive androidboot.memcg=1 '
-             'msm_rtb.filter=0x3F ehci-hcd.park=3 coherent_pool=8M sched_enable_power_aware=1 '
-             'user_debug=31 printk.devkmsg=on loop.max_part=16 kpti=0 '
-             'androidboot.hardware=pdx213 androidboot.fstab_suffix=pdx213 '
-             'audit=1 apparmor=1 security=apparmor utxperia.port=1')
-    subprocess.run([sys.executable,str(a.mkbootimg),'--kernel',str(a.kernel),'--ramdisk',str(ramdisk),
-      '--header_version','0','--pagesize','4096','--base','0','--kernel_offset','0x8000',
-      '--ramdisk_offset','0x02000000','--second_offset','0x00f00000','--tags_offset','0x01e00000',
-      '--cmdline',cmdline,'--output',str(a.output)],check=True)
+    metadata=json.loads(a.metadata.read_text())
+    cmdline=metadata['cmdline']
+    command=[sys.executable,str(a.mkbootimg),'--kernel',str(a.kernel),'--ramdisk',str(ramdisk)]
+    for name in ['header_version','pagesize','base','kernel_offset','ramdisk_offset','second_offset','tags_offset']:
+        command += ['--'+name,str(metadata[name])]
+    subprocess.run(command+['--cmdline',cmdline,'--output',str(a.output)],check=True)
     data=a.output.read_bytes(); assert data[:8]==b'ANDROID!' and len(data)<96*1024*1024
     v=struct.unpack_from('<10I',data,8); assert v[7:9]==(4096,0)
     report={'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),

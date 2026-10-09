@@ -1,3 +1,1 @@
-# Build and packaging tools
-
-Reserved for reproducible build tools after source import. Existing local scripts must be parameterized and their external inputs inventoried before enabling image builds.
+build.py builds kernel/boot from sources.lock.json; package_userdata.py performs separate fakeroot assembly with an explicit reviewed vendor input. Paths use UT_PORTS_DATA_DIR and explicit tool arguments. release_metadata.py prepares metadata only; no tool in this repository automatically flashes or publishes.

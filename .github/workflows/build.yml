@@ -1,25 +1,71 @@
-name: Device build preparation
+name: Noble kernel and boot build
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [device/**, overlay/**, tools/**, sources.lock.json, .github/workflows/build.yml]
 permissions:
   contents: read
 jobs:
-  prepare:
+  build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 90
+    env:
+      UT_PORTS_DATA_DIR: ${{ runner.temp }}/ut-ports-data
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Check build readiness
+      - name: Validate and read source pins
+        id: pins
         run: |
           python3 ci/check_repository.py
           python3 - <<'PYTHON'
-          import json
-          import sys
+          import json, os
           from pathlib import Path
-          lock = json.loads(Path('sources.lock.json').read_text())
-          if lock['status'] != 'locked':
-              sys.exit('Build unavailable: source dependencies have not been pinned yet.')
-          sys.exit('Build unavailable: source import and reproducible build entry point are still pending.')
+          sources = json.loads(Path('sources.lock.json').read_text())['sources']
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for key in ['kernel', 'mkbootimg']:
+                  output.write(f"{key}={sources[key]['commit']}\n")
           PYTHON
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Actinis/ut-kernel-sony-msm
+          ref: ${{ steps.pins.outputs.kernel }}
+          path: kernel
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: LineageOS/android_system_tools_mkbootimg
+          ref: ${{ steps.pins.outputs.mkbootimg }}
+          path: mkbootimg
+          persist-credentials: false
+      - name: Install host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc qemu-user unzip
+      - name: Verify and extract the locked NDK
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, json, os, shutil, urllib.request
+          from pathlib import Path
+          data = Path(os.environ['UT_PORTS_DATA_DIR'])
+          downloads = data / 'downloads'
+          downloads.mkdir(parents=True)
+          entry = json.loads(Path('sources.lock.json').read_text())['sources']['toolchain']
+          archive = downloads / entry['filename']
+          with urllib.request.urlopen(entry['url']) as source, archive.open('wb') as destination:
+              shutil.copyfileobj(source, destination)
+          digest = hashlib.file_digest(archive.open('rb'), 'sha256').hexdigest()
+          assert digest == entry['sha256'], 'NDK checksum mismatch'
+          PYTHON
+          unzip -q "$UT_PORTS_DATA_DIR/downloads/android-ndk-r23b-linux.zip" -d "$UT_PORTS_DATA_DIR/toolchains"
+      - name: Build kernel, DTBO, helpers and release boot
+        run: |
+          python3 tools/build.py --kernel-source "$GITHUB_WORKSPACE/kernel" \
+            --mkbootimg-source "$GITHUB_WORKSPACE/mkbootimg" \
+            --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
+            --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs
+      - name: Explain qualification boundary
+        run: echo 'Kernel and boot built. No vendor/OEM, userdata, phone qualification, flash, OTA or release publication was performed.'
