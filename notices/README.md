@@ -1,0 +1,1 @@
+Vendor attribution and public Android source manifest. Neither vendor nor OEM binary is included. These notices do not establish a complete redistribution audit. Kernel retains upstream GPL/COPYING; imported upstream components retain their original licences. No blanket relicensing of upstream code is intended.

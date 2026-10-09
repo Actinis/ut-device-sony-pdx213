@@ -1,3 +1,1 @@
-# Rootfs overlay
-
-Reserved for device integration files. Source import is pending; no functional overlay is provided yet.
+Public Noble rootfs integration. Apply only to a clean locked rootfs through prepare_release_rootfs.py. Generated identities, user state, SSH keys and vendor binaries are excluded. Runtime hardware paths are Xperia-specific; other variants are not qualified.

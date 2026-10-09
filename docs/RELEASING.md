@@ -19,4 +19,4 @@ Include `SHA256SUMS`, `sources.lock.json`, `release-manifest.json` and hardware 
 
 The release manifest records the exact device commit separately from the source lock to avoid a self-referential commit hash. It also records artifact names, sizes and SHA256 values, build provenance and tested device variants. Do not attach personal backups or vendor binaries without confirmed redistribution permission.
 
-There is no automatic image build, flashing, OTA delivery or release publication configured yet.
+Kernel/boot CI and local image assembly exist. There is no automated flashing, OTA delivery or release publication. A first tag is gated on vendor/OEM provenance, clean stock-baseline installation/restoration and exact-build device qualification.

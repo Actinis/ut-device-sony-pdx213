@@ -1,20 +1,30 @@
-# Ubuntu Touch device adaptation: Sony Xperia 10 III
+# Ubuntu Touch 24.04 — Sony Xperia 10 III
 
-Target: **Ubuntu Touch 24.04 (Noble)** on Sony Xperia 10 III, codename `pdx213` / `lena`. The initial development target is XQ-BT52; other variants are not qualified.
+Experimental Actinis community adaptation for **Ubuntu Touch 24.04 Noble**,
+Halium 11, Sony `pdx213` / `lena`. The qualified prototype variant is **XQ-BT52**;
+other variants are untested. This is not an official UBports release.
 
-This repository is reserved for device configuration, rootfs overlays, boot integration, image packaging, build instructions and hardware support documentation.
+Sources include independent GPT-label boot/storage integration, a Noble rootfs
+overlay, native Android hardware services, kernel/boot builds and local image
+assembly. The runtime prototype boots from ordinary ext4 userdata with separate
+Ubuntu, Android and vendor images. It has no installed legacy/LVM dependency.
+An independently reproducible vendor input and an installation after complete
+stock Android restoration are still unqualified. Do not apply prototype storage
+assumptions to other models or firmware revisions.
 
-## Status
+There is no universal UBports Installer integration, public image release or
+OTA channel. This source publication does not create a release tag.
 
-Preparation scaffold only. The working port is undergoing fixes in a separate workspace; its sources and validation results have not been imported here. There are no installation instructions or downloadable device images in this repository yet.
+- [Build and local data layout](docs/BUILD.md)
+- [Exact sources and manual inputs](docs/SOURCES.md)
+- [Hardware results and gaps](docs/HARDWARE.md)
+- [Installation qualification](docs/INSTALLATION-QUALIFICATION.md)
+- [Release preparation](docs/RELEASING.md)
 
-The existing development installation uses a device-specific legacy storage layout. A general installation procedure must be developed and qualified separately before publishing instructions for other phones.
+CI validates source metadata and tests, and the build workflow compiles the
+kernel, DTBO, helpers and boot image from the pinned sources. It does not flash
+or qualify a phone. Device results describe the tested prototype; source-import
+builds require their own installation/hardware qualification.
 
-## Related repositories
-
-- [Port catalog](https://github.com/Actinis/ut-ports)
-- [Ubuntu Touch Sony kernel](https://github.com/Actinis/ut-kernel-sony-msm)
-
-Only Ubuntu Touch 24.04 is currently planned for support. Source import must preserve component provenance and licenses, document exact dependencies and exclude private device data.
-
-This is an Actinis community port, not an official UBports release.
+Related: [port catalog](https://github.com/Actinis/ut-ports),
+[kernel source branch](https://github.com/Actinis/ut-kernel-sony-msm/tree/pdx213-halium11-noble).

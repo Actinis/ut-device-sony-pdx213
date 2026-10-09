@@ -1,3 +1,1 @@
-# Device configuration
-
-Reserved for reviewed deviceinfo and boot configuration imported from the completed Sony port. No flashable configuration is supplied yet.
+Release init, explicit boot metadata and helper sources for XQ-BT52 Noble. Kernel configuration and DTB/DTBO sources live in the pinned kernel repository. No device backups or identifiers belong here.
