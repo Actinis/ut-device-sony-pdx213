@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+library=libvndservicemanager-apparmor-compat.so
+cp "/usr/local/lib/utxperia/$library" "$LXC_ROOTFS_PATH/vendor/lib64/$library"
+config="$LXC_ROOTFS_PATH/vendor/etc/init/vndservicemanager.rc"
+if ! grep -q "setenv LD_PRELOAD /vendor/lib64/$library" "$config"; then
+    sed -i "/^service vndservicemanager /a\    setenv LD_PRELOAD /vendor/lib64/$library" "$config"
+fi

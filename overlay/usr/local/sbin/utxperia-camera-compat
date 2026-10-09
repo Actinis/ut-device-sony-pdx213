@@ -1,0 +1,42 @@
+#!/bin/sh
+# Correct Sony CamX partial-initialization cleanup without changing ODM on disk.
+set -eu
+target=/android/odm/lib64/hw/camera.qcom.so
+original_sha=6556265bdc97837b7c795ad5f69410da6bd7e564067f9abc0f8e30242a0feaf7
+patched_sha=baed8c7fbfb13b3a1fa09ab44d07282ad3594c39238f5ac7674862e6085ecd63
+current_sha=$(sha256sum "$target" | cut -d ' ' -f 1)
+if [ "$current_sha" = "$patched_sha" ]; then
+    exit 0
+fi
+if [ "$current_sha" != "$original_sha" ]; then
+    echo 'utxperia-camera-compat: unsupported Sony camera HAL; keeping original' >&2
+    exit 1
+fi
+mkdir -p /run/utxperia
+original=/run/utxperia/camera.qcom-original.so
+output=/run/utxperia/camera.qcom-node-destroy.so
+if ! mountpoint -q "$original"; then
+    : > "$original"
+    mount --bind "$target" "$original"
+    # ODM is shared: isolate this snapshot from mounts later added on the HAL.
+    mount --make-private "$original"
+    mount -o remount,bind,ro "$original"
+fi
+stage=$(mktemp /run/utxperia/camera.qcom.XXXXXX)
+mounted=no
+cleanup() {
+    result=$?
+    rm -f "$stage"
+    if [ "$result" -ne 0 ] && [ "$mounted" = yes ]; then
+        umount "$target"
+    fi
+}
+trap cleanup EXIT
+python3 /usr/local/lib/utxperia/patch_camx_node_destroy.py "$original" "$stage"
+[ "$(sha256sum "$stage" | cut -d ' ' -f 1)" = "$patched_sha" ]
+chmod 0644 "$stage"
+mv "$stage" "$output"
+mount --bind "$output" "$target"
+mounted=yes
+mount -o remount,bind,ro "$target"
+echo 'utxperia-camera-compat: Sony CamX cleanup guard active (RAM, read-only)'

@@ -1,0 +1,28 @@
+#!/bin/sh
+# Add MTP to the existing network gadget without changing its identity or IP.
+set -eu
+base=/sys/kernel/config/usb_gadget
+gadget=$base/utxperia
+controller=a600000.dwc3
+test -d "$gadget/functions/rndis.usb0"
+if [ -L "$gadget/configs/c.1/mtp.gs0" ]; then
+    exit 0
+fi
+# Android's unused gadget allocates the single legacy MTP endpoint first.
+# Never remove a function from a gadget bound to a controller.
+if [ -d "$base/g1/functions/mtp.gs0" ]; then
+    test -z "$(cat "$base/g1/UDC")"
+    rmdir "$base/g1/functions/mtp.gs0"
+fi
+restore_network() {
+    if [ -z "$(cat "$gadget/UDC")" ]; then
+        echo "$controller" > "$gadget/UDC"
+    fi
+}
+trap restore_network EXIT
+echo '' > "$gadget/UDC"
+mkdir -p "$gadget/functions/mtp.gs0"
+ln -s "$gadget/functions/mtp.gs0" "$gadget/configs/c.1/mtp.gs0"
+echo "$controller" > "$gadget/UDC"
+ip address replace 192.168.77.15/24 dev usb0
+ip link set usb0 up

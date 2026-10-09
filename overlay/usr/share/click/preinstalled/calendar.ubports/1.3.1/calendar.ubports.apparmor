@@ -1,0 +1,25 @@
+{
+    "policy_groups": [
+        "calendar",
+        "networking",
+        "contacts",
+        "accounts",
+        "connectivity",
+        "push-notification-client",
+        "content_exchange",
+        "content_exchange_source"
+    ],
+    "read_path": [
+        "/etc/writable/timezone",
+        "/usr/lib/python3.12/",
+        "/usr/lib/python3.12/**/",
+        "/utxperia/upper/usr/lib/python3.12/",
+        "/utxperia/upper/usr/lib/python3.12/**/",
+        "/usr/lib/python3/dist-packages/",
+        "/utxperia/upper/usr/lib/python3/dist-packages/"
+    ],
+    "policy_version": 20.04,
+    "abstractions": [
+        "python"
+    ]
+}

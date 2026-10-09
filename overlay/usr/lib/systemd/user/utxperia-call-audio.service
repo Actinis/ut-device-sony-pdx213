@@ -1,0 +1,13 @@
+[Unit]
+Description=Xperia single-microphone voice route during calls
+After=pulseaudio.service audiosystem-passthrough-qti.service
+Wants=audiosystem-passthrough-qti.service
+PartOf=pulseaudio.service
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/lib/utxperia/call_audio.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=pulseaudio.service

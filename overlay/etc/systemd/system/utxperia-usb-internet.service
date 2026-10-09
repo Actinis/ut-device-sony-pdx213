@@ -1,0 +1,13 @@
+[Unit]
+Description=Internet over the Xperia development USB network
+After=utxperia-usb.service NetworkManager.service
+Requires=utxperia-usb.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/ip route replace default via 192.168.77.20 dev usb0 metric 700
+ExecStart=/bin/sh -c 'printf "nameserver 192.168.77.20\n" > /run/NetworkManager/resolv.conf'
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+{
+    "policy_groups": [],
+    "policy_version": 20.04,
+    "abstractions": [
+        "python"
+    ],
+    "read_path": [
+        "/usr/lib/python3.12/",
+        "/usr/lib/python3.12/**/",
+        "/utxperia/upper/usr/lib/python3.12/",
+        "/utxperia/upper/usr/lib/python3.12/**/",
+        "/usr/lib/python3/dist-packages/",
+        "/utxperia/upper/usr/lib/python3/dist-packages/"
+    ]
+}

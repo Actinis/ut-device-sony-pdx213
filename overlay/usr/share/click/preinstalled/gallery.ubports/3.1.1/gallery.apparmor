@@ -1,0 +1,23 @@
+{
+    "policy_groups": [
+        "audio",
+        "content_exchange",
+        "content_exchange_source",
+        "picture_files",
+        "video",
+        "video_files"
+    ],
+    "read_path": [
+        "/media/",
+        "/usr/lib/python3.12/",
+        "/usr/lib/python3.12/**/",
+        "/utxperia/upper/usr/lib/python3.12/",
+        "/utxperia/upper/usr/lib/python3.12/**/",
+        "/usr/lib/python3/dist-packages/",
+        "/utxperia/upper/usr/lib/python3/dist-packages/"
+    ],
+    "policy_version": 20.04,
+    "abstractions": [
+        "python"
+    ]
+}

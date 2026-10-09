@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+mkdir -p /android/data /var/lib/android-data /dev/socket /dev/__properties__
+mountpoint -q /android/data || mount --bind /var/lib/android-data /android/data
+if [ ! -e /dev/binder ]; then
+    mkdir -p /dev/binderfs
+    mountpoint -q /dev/binderfs || mount -t binder binder /dev/binderfs -o stats=global
+    for dev in /dev/binderfs/*binder; do ln -sf "$dev" /dev/; done
+fi

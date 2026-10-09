@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+# A second-stage init cannot reuse the previous container's property area.
+# This path is exclusively RAM; never remove it if backed by disk storage.
+if [ "$(findmnt -T /dev/__properties__ -n -o FSTYPE)" = devtmpfs ]; then
+    rm -rf /dev/__properties__
+    mkdir -p /dev/__properties__
+    rm -f /dev/socket/property_service /dev/socket/logd /dev/socket/logdr /dev/socket/logdw
+fi

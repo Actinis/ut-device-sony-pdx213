@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize Xperia WLAN driver
+After=lxc-android-config.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo 1 > /sys/kernel/boot_wlan/boot_wlan'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

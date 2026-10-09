@@ -1,0 +1,26 @@
+pdx213:
+  Names:
+    - pdx213
+    - lena
+    - XQ-BT52
+    - halium_arm64
+  PrettyName: Sony Xperia 10 III
+  DeviceType: phone
+  GridUnit: 21
+  SupportedOrientations:
+    - Portrait
+    - Landscape
+    - InvertedLandscape
+  MirAndroidPlatformServerBackpressure:
+    - false
+  MirAndroidPlatformServerPartialUpdates:
+    - true
+  MirAndroidPlatformServerEglSync:
+    - false
+  MirAndroidPlatformClientEglFlush:
+    - "!/usr/bin/lomiri,all"
+  FilesystemEncryption: false
+  OfonoPlugin: binder
+  FlashlightBackend: sysfs
+  FlashlightSysfsPath: /sys/class/leds/led:torch_0/brightness
+  FlashlightSwitchPath: /sys/class/leds/led:switch_0/brightness

@@ -1,0 +1,28 @@
+{
+    "policy_groups": [
+        "picture_files",
+        "video_files",
+        "camera",
+        "audio",
+        "video",
+        "usermetrics",
+        "content_exchange",
+        "content_exchange_source",
+        "location",
+        "sensors"
+    ],
+    "policy_version": 20.04,
+    "read_path": [
+        "@{PROC}/*/mounts",
+        "/dev/disk/by-label/",
+        "/utxperia/upper/usr/lib/python3.12/",
+        "/utxperia/upper/usr/lib/python3.12/**/",
+        "/usr/lib/python3.12/",
+        "/usr/lib/python3.12/**/",
+        "/usr/lib/python3/dist-packages/",
+        "/utxperia/upper/usr/lib/python3/dist-packages/"
+    ],
+    "abstractions": [
+        "python"
+    ]
+}

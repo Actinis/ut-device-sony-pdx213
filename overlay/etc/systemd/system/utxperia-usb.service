@@ -1,0 +1,12 @@
+[Unit]
+Description=Preserve diagnostic USB access during Xperia bring-up
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/ip address replace 192.168.77.15/24 dev usb0
+ExecStart=/usr/sbin/ip link set usb0 up
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=Configure Xperia MTP after the initial graphical boot
+
+[Timer]
+OnBootSec=90s
+Unit=utxperia-usb-mtp.service
+
+[Install]
+WantedBy=timers.target

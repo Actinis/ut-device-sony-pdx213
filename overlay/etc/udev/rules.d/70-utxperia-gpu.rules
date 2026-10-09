@@ -1,0 +1,3 @@
+# Adreno allocations used by Lomiri and its clients.
+KERNEL=="kgsl-3d0", GROUP="android_graphics", MODE="0660"
+KERNEL=="ion", GROUP="android_graphics", MODE="0660"
