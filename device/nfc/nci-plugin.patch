@@ -1,0 +1,136 @@
+diff --git a/include/nci_adapter_impl.h b/include/nci_adapter_impl.h
+index 08b4266..3037fa6 100644
+--- a/include/nci_adapter_impl.h
++++ b/include/nci_adapter_impl.h
+@@ -65,7 +65,8 @@ typedef struct nci_adapter_class {
+     void (*next_state_changed)(NciAdapter* adapter);
+ 
+     /* Padding for future expansion */
+-    void (*_reserved1)(void);
++    /* Optional gate for controller initialization before RF discovery. */
++    gboolean (*can_discover)(NciAdapter* adapter);
+     void (*_reserved2)(void);
+     void (*_reserved3)(void);
+     void (*_reserved4)(void);
+diff --git a/src/nci_adapter.c b/src/nci_adapter.c
+index 3979b58..3ec9cc8 100644
+--- a/src/nci_adapter.c
++++ b/src/nci_adapter.c
+@@ -600,7 +600,9 @@ nci_adapter_state_check(
+         nci->next_state == NCI_RFST_IDLE) {
+         NfcAdapter* adapter = &self->parent;
+ 
+-        if (adapter->enabled && adapter->powered && adapter->power_requested) {
++        NciAdapterClass* klass = GET_THIS_CLASS(self);
++        if (adapter->enabled && adapter->powered && adapter->power_requested &&
++            (!klass->can_discover || klass->can_discover(self))) {
+             /*
+              * State machine may have switched to RFST_IDLE in the process of
+              * changing the operation mode or active technologies. Kick it
+@@ -834,11 +836,15 @@ nci_adapter_create_known_tag(
+             }
+         }
+         break;
++    case NCI_PROTOCOL_PROPRIETARY:
++        if (ntf->rf_intf == NCI_RF_INTERFACE_PROPRIETARY && ntf->mode == NCI_MODE_PASSIVE_POLL_A)
++            tag = nfc_adapter_add_tag_mfc(NFC_ADAPTER(self), target,
++                nci_adapter_convert_poll_a(&poll_a, mp));
++        break;
+     case NCI_PROTOCOL_T1T:
+     case NCI_PROTOCOL_T3T:
+     case NCI_PROTOCOL_T5T:
+     case NCI_PROTOCOL_NFC_DEP:
+-    case NCI_PROTOCOL_PROPRIETARY:
+     case NCI_PROTOCOL_UNDETERMINED:
+         break;
+     }
+@@ -1677,10 +1683,10 @@ nci_adapter_init(
+     adapter->supported_modes = NFC_MODE_READER_WRITER |
+         NFC_MODE_P2P_INITIATOR | NFC_MODE_P2P_TARGET |
+         NFC_MODE_CARD_EMILATION;
+-    adapter->supported_tags = NFC_TAG_TYPE_MIFARE_ULTRALIGHT;
++    adapter->supported_tags = NFC_TAG_TYPE_MIFARE_ULTRALIGHT | NFC_TAG_TYPE_MIFARE_CLASSIC;
+     adapter->supported_protocols = NFC_PROTOCOL_T2_TAG |
+         NFC_PROTOCOL_T4A_TAG | NFC_PROTOCOL_T4B_TAG |
+-        NFC_PROTOCOL_NFC_DEP;
++        NFC_PROTOCOL_NFC_DEP | NFC_PROTOCOL_MIFARE_CLASSIC;
+ }
+ 
+ static
+diff --git a/src/nci_target.c b/src/nci_target.c
+index 3f4fcc7..22284b7 100644
+--- a/src/nci_target.c
++++ b/src/nci_target.c
+@@ -89,6 +89,7 @@ struct nci_target {
+     gulong event_id[EVENT_COUNT];
+     guint send_in_progress;
+     gboolean transmit_in_progress;
++    guint8 mfc_block;
+     GBytes* pending_reply; /* Reply arrived before send has completed */
+     NciTargetPresenceCheckFunc presence_check_fn;
+     NciTargetTransmitFinishFunc transmit_finish_fn;
+@@ -286,6 +287,28 @@ nci_target_presence_check_t4(
+         nci_target_presence_check_free1, check);
+ }
+ 
++static void nci_target_presence_check_mfc_complete(NfcTarget* target,
++    NFC_TRANSMIT_STATUS status, const void* data, guint len, void* user_data)
++{
++    NciTargetPresenceCheck* check = user_data;
++    /* A Classic READ succeeds only with a full 16-byte data block. */
++    check->done(target, status == NFC_TRANSMIT_STATUS_OK && len == 16,
++        check->user_data);
++}
++
++static guint nci_target_presence_check_mfc(NciTarget* self, NciTargetPresenceCheck* check)
++{
++    const guint8 cmd[] = {0x30, self->mfc_block};
++    return nfc_target_transmit(&self->target, cmd, sizeof(cmd), self->target.sequence,
++        nci_target_presence_check_mfc_complete, nci_target_presence_check_free1, check);
++}
++
++static gboolean nci_target_transmit_finish_mfc(NfcTarget* target, const guint8* data, guint len)
++{
++    nfc_target_transmit_done(target, NFC_TRANSMIT_STATUS_OK, data, len);
++    return TRUE;
++}
++
+ static
+ gboolean
+ nci_target_transmit_finish_frame(
+@@ -435,6 +458,13 @@ nci_target_new(
+                 break;
+             }
+             break;
++        case NCI_PROTOCOL_PROPRIETARY:
++            if (tech == NFC_TECHNOLOGY_A && ntf->rf_intf == NCI_RF_INTERFACE_PROPRIETARY &&
++                ntf->mode_param && ntf->mode_param->poll_a.sel_res == 8) {
++                protocol = NFC_PROTOCOL_MIFARE_CLASSIC;
++                presence_check = nci_target_presence_check_mfc;
++            }
++            break;
+         case NCI_PROTOCOL_NFC_DEP:
+             protocol = NFC_PROTOCOL_NFC_DEP;
+             break;
+@@ -448,6 +478,12 @@ nci_target_new(
+             int tx_timeout = -1;
+ 
+             switch (ntf->rf_intf) {
++            case NCI_RF_INTERFACE_PROPRIETARY:
++                if (protocol == NFC_PROTOCOL_MIFARE_CLASSIC) {
++                    tx_timeout = 1000;
++                    transmit_finish = nci_target_transmit_finish_mfc;
++                }
++                break;
+             case NCI_RF_INTERFACE_FRAME:
+                 switch (ntf->protocol) {
+                 case NCI_PROTOCOL_NFC_DEP:
+@@ -535,6 +571,8 @@ nci_target_transmit(
+     GASSERT(!self->send_in_progress);
+     GASSERT(!self->transmit_in_progress);
+     if (adapter) {
++        if (target->protocol == NFC_PROTOCOL_MIFARE_CLASSIC && len == 2 &&
++            ((const guint8*)data)[0] == 0x30) self->mfc_block = ((const guint8*)data)[1];
+         GBytes* bytes = g_bytes_new(data, len);
+ 
+         self->send_in_progress = nci_core_send_data_msg(adapter->nci,

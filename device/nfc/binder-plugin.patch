@@ -1,0 +1,163 @@
+diff --git a/src/binder_nfc_adapter.c b/src/binder_nfc_adapter.c
+index ec950ec..e253034 100644
+--- a/src/binder_nfc_adapter.c
++++ b/src/binder_nfc_adapter.c
+@@ -78,6 +78,9 @@ struct binder_nfc_adapter {
+     gulong data_id;
+ 
+     gboolean core_initialized;
++    gboolean core_ready;
++    gboolean mode_queued;
++    NFC_MODE queued_mode;
+     gboolean need_power;
+     gboolean power_on;
+     gboolean power_switch_pending;
+@@ -211,6 +214,11 @@ binder_nfc_adapter_handle_data(
+ 
+     DUMP("%c data, %u byte(s)", DIR_IN, (guint) size);
+     BINDER_DUMP(DIR_IN, data, size);
++    GDEBUG("NCI RX size=%u", (guint) size);
++    if (size >= 3) {
++        const guint8* b = data;
++        GDEBUG("NCI RX header %02x%02x%02x", b[0], b[1], b[2]);
++    }
+     if (hal_client) {
+         hal_client->fn->read(hal_client, data, size);
+     }
+@@ -320,6 +328,7 @@ binder_nfc_adapter_open(
+ {
+     GDEBUG("Opening adapter");
+     self->core_initialized = FALSE;
++    self->core_ready = FALSE;
+     self->open_cplt = binder_nfc_adapter_open_cplt;
+     self->pending_tx = binder_nfc_api_open(self->api,
+         binder_nfc_adapter_open_complete, NULL, self);
+@@ -444,7 +453,17 @@ binder_nfc_adapter_prediscover_complete(
+ 
+     GDEBUG("PREDISCOVER %s", ok ? "ok" : "failed (that's ok)");
+     self->pending_tx = 0;
+-    nci_core_set_state(nci, NCI_RFST_DISCOVERY);
++    self->core_ready = TRUE;
++    if (self->power_on && self->need_power) {
++        if (self->mode_queued) {
++            NFC_MODE mode = self->queued_mode;
++            self->mode_queued = FALSE;
++            NFC_ADAPTER_CLASS(PARENT_CLASS)->submit_mode_request(
++                NFC_ADAPTER(self), mode);
++        } else {
++            nci_core_set_state(nci, NCI_RFST_DISCOVERY);
++        }
++    }
+     binder_nfc_adapter_state_check(self);
+ }
+ 
+@@ -457,8 +476,12 @@ binder_nfc_adapter_core_initialized_complete(
+ {
+     BinderNfcAdapter* self = THIS(user_data);
+ 
+-    GDEBUG("CORE_INITIALIZED %s", ok ? "ok" : "failed (that's ok)");
++    GDEBUG("CORE_INITIALIZED %s", ok ? "ok" : "failed");
+     self->pending_tx = 0;
++    if (!ok) {
++        /* Do not start RF discovery on an unconfigured controller. */
++        self->need_power = FALSE;
++    }
+     binder_nfc_adapter_state_check(self);
+ }
+ 
+@@ -613,6 +636,42 @@ binder_nfc_adapter_cancel_power_request(
+     self->power_switch_pending = FALSE;
+ }
+ 
++/*
++ * Power notification can immediately submit a mode request while CORE_INIT
++ * is still pending. Keep the NCI machine idle until the vendor HAL has
++ * completed coreInitialized and preDiscover. Sending RF_DISCOVER early
++ * prevents SN100 from accepting its required vendor configuration.
++ */
++static
++gboolean
++binder_nfc_adapter_submit_mode_request(
++    NfcAdapter* adapter,
++    NFC_MODE mode)
++{
++    BinderNfcAdapter* self = THIS(adapter);
++
++    if (!self->core_ready) {
++        self->queued_mode = mode;
++        self->mode_queued = TRUE;
++        return TRUE;
++    }
++    return NFC_ADAPTER_CLASS(PARENT_CLASS)->submit_mode_request(adapter, mode);
++}
++
++static
++void
++binder_nfc_adapter_cancel_mode_request(
++    NfcAdapter* adapter)
++{
++    BinderNfcAdapter* self = THIS(adapter);
++
++    if (self->mode_queued) {
++        self->mode_queued = FALSE;
++    } else {
++        NFC_ADAPTER_CLASS(PARENT_CLASS)->cancel_mode_request(adapter);
++    }
++}
++
+ /*==========================================================================*
+  * NFC HAL I/O
+  *==========================================================================*/
+@@ -782,6 +841,14 @@ binder_nfc_adapter_finalize(
+     G_OBJECT_CLASS(PARENT_CLASS)->finalize(object);
+ }
+ 
++static
++gboolean
++binder_nfc_adapter_can_discover(
++    NciAdapter* adapter)
++{
++    return THIS(adapter)->core_ready;
++}
++
+ static
+ void
+ binder_nfc_adapter_class_init(
+@@ -790,12 +857,17 @@ binder_nfc_adapter_class_init(
+     GObjectClass* object_class = G_OBJECT_CLASS(klass);
+     NfcAdapterClass* nfc_adapter_class = NFC_ADAPTER_CLASS(klass);
+ 
++    klass->can_discover = binder_nfc_adapter_can_discover;
+     klass->current_state_changed = binder_nfc_adapter_current_state_changed;
+     klass->next_state_changed = binder_nfc_adapter_next_state_changed;
+     nfc_adapter_class->submit_power_request =
+         binder_nfc_adapter_submit_power_request;
+     nfc_adapter_class->cancel_power_request =
+         binder_nfc_adapter_cancel_power_request;
++    nfc_adapter_class->submit_mode_request =
++        binder_nfc_adapter_submit_mode_request;
++    nfc_adapter_class->cancel_mode_request =
++        binder_nfc_adapter_cancel_mode_request;
+     object_class->finalize = binder_nfc_adapter_finalize;
+     binder_nfc_adapter_signals[SIGNAL_DEATH] =
+         g_signal_new(SIGNAL_DEATH_NAME, G_OBJECT_CLASS_TYPE(klass),
+diff --git a/src/binder_nfc_api_hidl.c b/src/binder_nfc_api_hidl.c
+index 8a9376c..2a93e61 100644
+--- a/src/binder_nfc_api_hidl.c
++++ b/src/binder_nfc_api_hidl.c
+@@ -317,8 +317,14 @@ binder_nfc_api_hidl_core_initialized(
+     GDestroyNotify destroy,
+     gpointer user_data)
+ {
++    GBinderLocalRequest* req = gbinder_client_new_request(api->client);
++    GBinderWriter writer;
++
++    /* INfc::coreInitialized requires vec<uint8_t>, including when empty. */
++    gbinder_local_request_init_writer(req, &writer);
++    gbinder_writer_append_hidl_vec(&writer, NULL, 0, sizeof(guint8));
+     return binder_nfc_api_hidl_call(api,
+-        BINDER_NFC_HIDL_REQ_CORE_INITIALIZED, NULL,
++        BINDER_NFC_HIDL_REQ_CORE_INITIALIZED, req,
+         complete, destroy, user_data);
+ }
+ 

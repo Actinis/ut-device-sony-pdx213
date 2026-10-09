@@ -1,0 +1,71 @@
+diff --git a/SN100x/halimpl/dnld/phNxpNciHal_Dnld.cc b/SN100x/halimpl/dnld/phNxpNciHal_Dnld.cc
+index bd59d93..fa4155e 100644
+--- a/SN100x/halimpl/dnld/phNxpNciHal_Dnld.cc
++++ b/SN100x/halimpl/dnld/phNxpNciHal_Dnld.cc
+@@ -1771,6 +1771,8 @@ static NFCSTATUS phNxpNciHal_fw_dnld_complete(void* pContext, NFCSTATUS status,
+ *******************************************************************************/
+ NFCSTATUS phNxpNciHal_fw_download_seq(uint8_t bClkSrcVal, uint8_t bClkFreqVal,
+                                       uint8_t seq_handler_offset) {
++  /* Port qualification: retain installed NFCC firmware. */
++  return NFCSTATUS_FAILED;
+   NFCSTATUS status = NFCSTATUS_FAILED;
+   phDnldNfc_Buff_t pInfo;
+   const char* pContext = "FW-Download";
+diff --git a/SN100x/halimpl/hal/phNxpNciHal.cc b/SN100x/halimpl/hal/phNxpNciHal.cc
+index ff27170..d425e71 100755
+--- a/SN100x/halimpl/hal/phNxpNciHal.cc
++++ b/SN100x/halimpl/hal/phNxpNciHal.cc
+@@ -463,6 +463,8 @@ static NFCSTATUS phNxpNciHal_force_fw_download(uint8_t seq_handler_offset) {
+  *
+  ******************************************************************************/
+ NFCSTATUS phNxpNciHal_fw_download(uint8_t seq_handler_offset) {
++  /* Port qualification: retain installed NFCC firmware. */
++  return NFCSTATUS_FAILED;
+   NFCSTATUS status = NFCSTATUS_FAILED;
+   phNxpNciHal_UpdateFwStatus(HAL_NFC_FW_UPDATE_START);
+   phNxpNciHal_nfccClockCfgRead();
+@@ -1261,6 +1263,7 @@ static void phNxpNciHal_read_complete(void* pContext,
+   }
+   if (pInfo->wStatus == NFCSTATUS_SUCCESS) {
+     NXPLOG_NCIHAL_D("read successful status = 0x%x", pInfo->wStatus);
++    if (pInfo->wLength >= 3) NXPLOG_NCIHAL_E("UT RX %02x%02x%02x ext=%d wait=%d", pInfo->pBuff[0],pInfo->pBuff[1],pInfo->pBuff[2],nxpncihal_ctrl.hal_ext_enabled,nxpncihal_ctrl.nci_info.wait_for_ntf);
+ 
+     /*Check the Omapi command response and store in dedicated buffer to solve sync issue*/
+     if(pInfo->pBuff[0] == 0x4F && pInfo->pBuff[1] == 0x01 && pInfo->pBuff[2] == 0x01) {
+diff --git a/SN100x/halimpl/tml/phTmlNfc_i2c.cc b/SN100x/halimpl/tml/phTmlNfc_i2c.cc
+index 3722900..fab4e09 100644
+--- a/SN100x/halimpl/tml/phTmlNfc_i2c.cc
++++ b/SN100x/halimpl/tml/phTmlNfc_i2c.cc
+@@ -100,6 +100,11 @@ NFCSTATUS phTmlNfc_i2c_open_and_configure(pphTmlNfc_Config_t pConfig,
+   }
+ 
+   *pLinkHandle = (void*)((intptr_t)nHandle);
++  /* Sony pn553 driver starts with VEN low and uses the 32-bit ioctl ABI. */
++  phTmlNfc_i2c_reset(*pLinkHandle, MODE_POWER_OFF);
++  usleep(100000);
++  phTmlNfc_i2c_reset(*pLinkHandle, MODE_POWER_ON);
++  usleep(100000);
+ #if(NXP_EXTNS == TRUE)
+   if (0 != sem_init(&txrxSemaphore, 0, 1)) {
+     NXPLOG_TML_E("_i2c_open() Failed: reason sem_init : retval %x", nHandle);
+@@ -362,6 +367,7 @@ int phTmlNfc_i2c_write(void* pDevHandle, uint8_t* pBuffer,
+ **
+ *******************************************************************************/
+ int phTmlNfc_i2c_reset(void* pDevHandle, long level) {
++  if (level == MODE_FW_DWNLD_WITH_VEN || level == MODE_FW_DWND_HIGH || level == MODE_FW_DWND_HDR) { errno = EPERM; return -1; }
+   int ret = -1;;
+   NXPLOG_TML_D("phTmlNfc_i2c_reset(), VEN level %ld", level);
+ 
+diff --git a/SN100x/halimpl/tml/phTmlNfc_i2c.h b/SN100x/halimpl/tml/phTmlNfc_i2c.h
+index 4da0787..99ad483 100644
+--- a/SN100x/halimpl/tml/phTmlNfc_i2c.h
++++ b/SN100x/halimpl/tml/phTmlNfc_i2c.h
+@@ -60,7 +60,7 @@ extern phTmlNfc_i2cfragmentation_t fragmentation_enabled;
+  * PN544_SET_PWR(1): power on
+  * PN544_SET_PWR(2): reset and power on with firmware download enabled
+  */
+-#define PN544_SET_PWR _IOW(PN544_MAGIC, 0x01, long)
++#define PN544_SET_PWR _IOW(PN544_MAGIC, 0x01, unsigned int)
+ NFCSTATUS phTmlNfc_i2c_get_p61_power_state(void* pDevHandle);
+ NFCSTATUS phTmlNfc_i2c_set_p61_power_state(void* pDevHandle, long arg);
+ NFCSTATUS phTmlNfc_set_pid(void* pDevHandle, long pid);

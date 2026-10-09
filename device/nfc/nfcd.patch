@@ -1,0 +1,879 @@
+diff --git a/core/Makefile b/core/Makefile
+index f53302d..95b6015 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -55,6 +55,7 @@ SRC = \
+   nfc_plugin.c \
+   nfc_snep_server.c \
+   nfc_tag.c \
++  nfc_tag_mfc.c \
+   nfc_tag_t2.c \
+   nfc_tag_t4.c \
+   nfc_tag_t4a.c \
+diff --git a/core/include/nfc_adapter.h b/core/include/nfc_adapter.h
+index 211a553..1256f0d 100644
+--- a/core/include/nfc_adapter.h
++++ b/core/include/nfc_adapter.h
+@@ -162,6 +162,10 @@ nfc_adapter_get_supported_techs(
+     NfcAdapter* adapter) /* Since 1.2.0 */
+     NFCD_EXPORT;
+ 
++NfcTag*
++nfc_adapter_add_tag_mfc(NfcAdapter* adapter, NfcTarget* target,
++    const NfcParamPollA* poll) NFCD_EXPORT;
++
+ NfcTag*
+ nfc_adapter_add_tag_t2(
+     NfcAdapter* adapter,
+diff --git a/core/include/nfc_tag.h b/core/include/nfc_tag.h
+index fc0af39..ab308b7 100644
+--- a/core/include/nfc_tag.h
++++ b/core/include/nfc_tag.h
+@@ -118,6 +118,12 @@ nfc_tag_remove_handlers(
+ #define nfc_tag_remove_all_handlers(tag,ids) \
+     nfc_tag_remove_handlers(tag, ids, G_N_ELEMENTS(ids))
+ 
++/* Writes an existing public NDEF mapping; never formats or changes keys. */
++typedef void (*NfcTagMfcWriteFunc)(NfcTag*, gboolean, const char*, void*);
++gboolean nfc_tag_mfc_can_write(NfcTag* tag) NFCD_EXPORT;
++gboolean nfc_tag_mfc_write_ndef(NfcTag* tag, const void* data, guint size,
++    NfcTagMfcWriteFunc done, void* user_data) NFCD_EXPORT;
++
+ G_END_DECLS
+ 
+ #endif /* NFC_TAG_H */
+diff --git a/core/include/nfc_types.h b/core/include/nfc_types.h
+index bb83eff..5840984 100644
+--- a/core/include/nfc_types.h
++++ b/core/include/nfc_types.h
+@@ -110,6 +110,7 @@ typedef enum nfc_protocol {
+     NFC_PROTOCOL_T3_TAG  = 0x04,   /* Type 3 Tag */
+     NFC_PROTOCOL_T4A_TAG = 0x08,   /* Type 4A Tag (ISO-DEP, ISO 14443) */
+     NFC_PROTOCOL_T4B_TAG = 0x10,   /* Type 4B Tag (ISO-DEP, ISO 14443) */
++    NFC_PROTOCOL_MIFARE_CLASSIC = 0x40,
+     NFC_PROTOCOL_NFC_DEP = 0x20    /* NFC-DEP Protocol (ISO 18092) */
+ } NFC_PROTOCOL;
+ 
+diff --git a/core/src/nfc_adapter.c b/core/src/nfc_adapter.c
+index 624fd3a..7b7595c 100644
+--- a/core/src/nfc_adapter.c
++++ b/core/src/nfc_adapter.c
+@@ -809,6 +809,13 @@ nfc_adapter_hosts(
+     return G_LIKELY(self) ? self->priv->hosts : NULL;
+ }
+ 
++NfcTag*
++nfc_adapter_add_tag_mfc(NfcAdapter* self, NfcTarget* target, const NfcParamPollA* poll)
++{
++    NfcTag* tag = self ? nfc_tag_mfc_new(target, poll) : NULL;
++    return tag ? nfc_adapter_add_tag(self, tag) : NULL;
++}
++
+ NfcTag*
+ nfc_adapter_add_tag_t2(
+     NfcAdapter* self,
+diff --git a/core/src/nfc_tag_p.h b/core/src/nfc_tag_p.h
+index b55927f..33899e4 100644
+--- a/core/src/nfc_tag_p.h
++++ b/core/src/nfc_tag_p.h
+@@ -51,6 +51,11 @@ nfc_tag_new(
+     const NfcParamPoll* poll)
+     NFCD_INTERNAL;
+ 
++guint8 nfc_tag_mfc_mad_crc(const guint8* mad) NFCD_INTERNAL;
++
++NfcTag*
++nfc_tag_mfc_new(NfcTarget* target, const NfcParamPollA* poll) NFCD_INTERNAL;
++
+ NfcTagType2*
+ nfc_tag_t2_new(
+     NfcTarget* target,
+diff --git a/plugins/Makefile b/plugins/Makefile
+index 677f629..b7a923d 100644
+--- a/plugins/Makefile
++++ b/plugins/Makefile
+@@ -343,7 +343,7 @@ $(COVERAGE_BUILD_DIR):
+ 	mkdir -p $@
+ 
+ $(GEN_DIR)/%.c: %.xml
+-	gdbus-codegen --generate-c-code $(@:%.c=%) $<
++	gdbus-codegen --glib-max-allowed 2.80 --generate-c-code $(@:%.c=%) $<
+ 
+ $(DEBUG_BUILD_DIR)/%.o: $(GEN_DIR)/%.c
+ 	$(CC) -c $(DEBUG_CFLAGS) -MT"$@" -MF"$(@:%.o=%.d)" $< -o $@
+diff --git a/plugins/dbus_neard/dbus_neard_tag.c b/plugins/dbus_neard/dbus_neard_tag.c
+index 611064b..2502a87 100644
+--- a/plugins/dbus_neard/dbus_neard_tag.c
++++ b/plugins/dbus_neard/dbus_neard_tag.c
+@@ -53,6 +53,7 @@ enum {
+ 
+ enum {
+     NEARD_CALL_DEACTIVATE,
++    NEARD_CALL_WRITE,
+     NEARD_EVENT_COUNT
+ };
+ 
+@@ -210,6 +211,7 @@ dbus_neard_tag_initialized(
+ 
+     /* This callbacks should only be invoked once, but just in case... */
+     nfc_tag_remove_handlers(tag, self->tag_event_id + TAG_INITIALIZED, 1);
++    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
+     dbus_neard_tag_export_records(self);
+     if (tag->ndef) {
+         dbus_neard_manager_handle_ndef(self->agent_manager, tag->ndef);
+@@ -240,6 +242,72 @@ dbus_neard_tag_handle_deactivate(
+     return TRUE;
+ }
+ 
++static void dbus_neard_tag_write_done(NfcTag* tag, gboolean success,
++    const char* reason, void* data)
++{
++    GDBusMethodInvocation* call=data;
++    if(success) {
++        g_dbus_method_invocation_return_value(call,NULL);
++        /* Rediscover to refresh both NDEF and neard record objects. */
++        nfc_tag_deactivate(tag);
++    } else g_dbus_method_invocation_return_dbus_error(call,
++        "org.neard.Error.Failed",reason);
++    g_object_unref(call);
++}
++
++static gboolean dbus_neard_tag_handle_write(OrgNeardTag* iface,
++    GDBusMethodInvocation* call,GVariant* attributes,gpointer user_data)
++{
++    DBusNeardTag* self=user_data;
++    const char *type=NULL,*text=NULL,*language="en",*encoding="UTF-8";
++    GByteArray* raw;guint payload,langlen;guint8 header[7];
++    if(!g_variant_lookup(attributes,"Type","&s",&type) || strcmp(type,"Text") ||
++       !g_variant_lookup(attributes,"Representation","&s",&text)) {
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.InvalidArguments","Only Text NDEF records are supported");
++        return TRUE;
++    }
++    g_variant_lookup(attributes,"Language","&s",&language);
++    g_variant_lookup(attributes,"Encoding","&s",&encoding);
++    langlen=strlen(language);
++    if(strcmp(encoding,"UTF-8") || langlen>63 || !langlen || strlen(text)>700 ||
++        !g_utf8_validate(text,-1,NULL)) {
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.InvalidArguments","Invalid text, language or encoding");
++        return TRUE;
++    }
++    {
++        guint i;
++        for(i=0;i<langlen;i++) {
++            if(!g_ascii_isalnum(language[i]) && language[i]!='-') {
++                g_dbus_method_invocation_return_dbus_error(call,
++                    "org.neard.Error.InvalidArguments","Language must be an ASCII language tag");
++                return TRUE;
++            }
++        }
++    }
++    payload=1+langlen+strlen(text);raw=g_byte_array_new();
++    header[0]=payload<256 ? 0xd1 : 0xc1;header[1]=1;
++    if(payload<256) {
++        header[2]=payload;header[3]='T';g_byte_array_append(raw,header,4);
++    } else {
++        header[2]=header[3]=0;header[4]=payload>>8;header[5]=payload;
++        header[6]='T';g_byte_array_append(raw,header,7);
++    }
++    header[0]=langlen;g_byte_array_append(raw,header,1);
++    g_byte_array_append(raw,(const guint8*)language,langlen);
++    g_byte_array_append(raw,(const guint8*)text,strlen(text));
++    g_object_ref(call);
++    if(!nfc_tag_mfc_write_ndef(self->tag,raw->data,raw->len,
++        dbus_neard_tag_write_done,call)) {
++        g_object_unref(call);
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.NotSupported","Tag is busy, read-only, too small or unsupported");
++    }
++    g_byte_array_unref(raw);
++    return TRUE;
++}
++
+ DBusNeardTag*
+ dbus_neard_tag_new(
+     NfcTag* tag,
+@@ -267,6 +335,10 @@ dbus_neard_tag_new(
+         g_signal_connect(self->iface, "handle-deactivate",
+         G_CALLBACK(dbus_neard_tag_handle_deactivate), self);
+ 
++    self->neard_event_id[NEARD_CALL_WRITE] =
++        g_signal_connect(self->iface, "handle-write",
++        G_CALLBACK(dbus_neard_tag_handle_write), self);
++
+     switch (tag->type) {
+     case NFC_TAG_TYPE_FELICA:
+         protocol = NEARD_PROTOCOL_FELICA;
+@@ -297,7 +369,7 @@ dbus_neard_tag_new(
+         org_neard_tag_set_type_(self->iface, type->name);
+     }
+     org_neard_tag_set_adapter(self->iface, adapter_path);
+-    org_neard_tag_set_read_only(self->iface, TRUE);
++    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
+     g_dbus_object_manager_server_export(object_manager, object);
+     g_object_unref(object);
+ 
+diff --git a/core/src/nfc_tag_mfc.c b/core/src/nfc_tag_mfc.c
+new file mode 100644
+index 0000000..8c73b21
+--- /dev/null
++++ b/core/src/nfc_tag_mfc.c
+@@ -0,0 +1,413 @@
++/* SPDX-License-Identifier: BSD-3-Clause
++ * Copyright (C) 2026 Actinis
++ * MIFARE Classic 1K NDEF mapping. No formatting or key discovery.
++ * MAD layout and CRC: NXP AN10787. Public NDEF mapping: NXP AN1304.
++ */
++#include "nfc_tag_p.h"
++#include "nfc_target.h"
++#include "nfc_log.h"
++#include <nfcdef.h>
++#include <string.h>
++
++typedef struct mfc_write MfcWrite;
++static void mfc_write_abort(MfcWrite* write, const char* reason);
++
++typedef struct nfc_tag_mfc {
++    NfcTag tag;
++    NfcTargetSequence* seq;
++    guint tx;
++    guint start;
++    guint state;
++    guint block;
++    guint sector;
++    guint8 mad[32];
++    guint8 sectors[15];
++    guint count;
++    guint index;
++    gboolean writable;
++    MfcWrite* write;
++    GByteArray* bytes;
++} NfcTagMfc;
++typedef NfcTagClass NfcTagMfcClass;
++G_DEFINE_TYPE(NfcTagMfc, nfc_tag_mfc, NFC_TYPE_TAG)
++
++static const guint8 mad_key[6] = {0xa0,0xa1,0xa2,0xa3,0xa4,0xa5};
++static const guint8 ndef_key[6] = {0xd3,0xf7,0xd3,0xf7,0xd3,0xf7};
++/* AN10787 table 11 has CRC 0x89. Its coprocessor preset 0xe3 is
++ * bit-reversed to 0xc7 for this MSB-first polynomial 0x1d algorithm. */
++guint8 nfc_tag_mfc_mad_crc(const guint8* mad)
++{
++    guint8 crc = 0xc7;
++    guint i, bit;
++    for (i=1; i<32; i++) {
++        crc ^= mad[i];
++        for (bit=0; bit<8; bit++) crc = (crc << 1) ^ ((crc & 0x80) ? 0x1d : 0);
++    }
++    return crc;
++}
++
++enum {AUTH_MAD, READ_MAD1, READ_MAD2, READ_GPB, AUTH_NDEF, READ_ACCESS, READ_NDEF};
++static void mfc_next(NfcTagMfc* self);
++
++/* NDEF public Key A may write only data blocks with access condition 000.
++ * Reject corrupt complements, proprietary GPBs and read-only mappings. */
++static gboolean mfc_access_writable(const guint8* p)
++{
++    guint c1=p[7]>>4, c2=p[8]&15, c3=p[8]>>4;
++    return ((p[6]&15)^c1)==15 && ((p[6]>>4)^c2)==15 &&
++        ((p[7]&15)^c3)==15 && !(c1&7) && !(c2&7) && !(c3&7) &&
++        p[9]==0x40;
++}
++
++gboolean nfc_tag_mfc_can_write(NfcTag* tag)
++{
++    return tag && G_TYPE_CHECK_INSTANCE_TYPE(tag,nfc_tag_mfc_get_type()) &&
++        ((NfcTagMfc*)tag)->writable;
++}
++
++
++static void mfc_done(NfcTagMfc* self, gboolean success)
++{
++    if (self->seq) {
++        nfc_target_sequence_free(self->seq);
++        self->seq = NULL;
++    }
++    if (success && self->bytes->len) {
++        GUtilData tlv = {self->bytes->data, self->bytes->len};
++        self->tag.ndef = ndef_rec_new_from_tlv(&tlv);
++    }
++    GDEBUG("Classic NDEF initialization %s", success ? "complete" : "failed");
++    nfc_tag_set_initialized(&self->tag);
++}
++
++/* 1 complete NDEF TLV, 0 incomplete, -1 invalid/terminated without NDEF. */
++static int mfc_tlv(const guint8* data, guint size)
++{
++    guint pos = 0;
++    while (pos < size) {
++        guint type = data[pos++], len;
++        if (!type) continue;
++        if (type == 0xfe) return -1;
++        if (pos == size) return 0;
++        len = data[pos++];
++        if (len == 0xff) {
++            if (size - pos < 2) return 0;
++            len = ((guint)data[pos] << 8) | data[pos+1];
++            pos += 2;
++        }
++        if (len > 720 - pos) return -1;
++        if (len > size - pos) return 0;
++        if (type == 3) return 1;
++        pos += len;
++    }
++    return 0;
++}
++
++static void mfc_response(NfcTarget* target, NFC_TRANSMIT_STATUS status,
++    const void* data, guint len, void* user_data)
++{
++    NfcTagMfc* self = user_data;
++    const guint8* bytes = data;
++    self->tx = 0;
++    GDEBUG("Classic read step=%u status=%u length=%u", self->state, status, len);
++    if ((self->state == AUTH_MAD || self->state == AUTH_NDEF) && len == 1)
++        GDEBUG("Classic authentication status=%u", bytes[0]);
++    if (!self->tag.present) return;
++    if (status != NFC_TRANSMIT_STATUS_OK) { mfc_done(self, FALSE); return; }
++    switch (self->state) {
++    case AUTH_MAD:
++    case AUTH_NDEF:
++        if (len != 1 || bytes[0]) { mfc_done(self, FALSE); return; }
++        if (self->state == AUTH_MAD) self->state = READ_MAD1;
++        else { self->state = READ_ACCESS; self->block = self->sector * 4; }
++        break;
++    case READ_MAD1:
++    case READ_MAD2:
++        if (len != 16) { mfc_done(self, FALSE); return; }
++        memcpy(self->mad + (self->state == READ_MAD1 ? 0 : 16), bytes, 16);
++        self->state++;
++        break;
++    case READ_GPB: {
++        guint8 crc;
++        guint i;
++        if (len != 16 || (bytes[9] & 0x83) != 0x81) {
++            mfc_done(self, FALSE); return;
++        }
++        crc = nfc_tag_mfc_mad_crc(self->mad);
++        if (crc != self->mad[0]) { mfc_done(self, FALSE); return; }
++        for (i=1; i<16; i++) {
++            if (self->mad[2*i] == 0x03 && self->mad[2*i+1] == 0xe1)
++                self->sectors[self->count++] = i;
++        }
++        if (!self->count) { mfc_done(self, FALSE); return; }
++        self->sector = self->sectors[0];
++        self->state = AUTH_NDEF;
++        break;
++    }
++    case READ_ACCESS:
++        if (len != 16) { mfc_done(self,FALSE); return; }
++        if (!self->index) self->writable=mfc_access_writable(bytes);
++        self->state=READ_NDEF;
++        break;
++    case READ_NDEF: {
++        int result;
++        if (len != 16) { mfc_done(self, FALSE); return; }
++        g_byte_array_append(self->bytes, bytes, len);
++        result = mfc_tlv(self->bytes->data, self->bytes->len);
++        if (result) { mfc_done(self, result > 0); return; }
++        self->block++;
++        if ((self->block & 3) == 3) {
++            if (++self->index == self->count) { mfc_done(self, FALSE); return; }
++            self->sector = self->sectors[self->index];
++            self->state = AUTH_NDEF;
++        }
++        break;
++    }
++    }
++    mfc_next(self);
++}
++
++static void mfc_next(NfcTagMfc* self)
++{
++    guint8 cmd[12] = {0};
++    guint len = 2;
++    const NfcParamPollA* poll = &nfc_tag_param(&self->tag)->a;
++    if (self->state == AUTH_MAD || self->state == AUTH_NDEF) {
++        cmd[0] = 0x60;
++        cmd[1] = self->state == AUTH_MAD ? 0 : self->sector * 4;
++        memcpy(cmd+2, poll->nfcid1.bytes + poll->nfcid1.size - 4, 4);
++        memcpy(cmd+6, self->state == AUTH_MAD ? mad_key : ndef_key, 6);
++        len = 12;
++    } else {
++        cmd[0] = 0x30;
++        cmd[1] = self->state == READ_NDEF ? self->block :
++            self->state == READ_ACCESS ? self->sector*4+3 : self->state - READ_MAD1 + 1;
++    }
++    self->tx = nfc_target_transmit(self->tag.target, cmd, len, self->seq,
++        mfc_response, NULL, self);
++    if (!self->tx) mfc_done(self, FALSE);
++}
++
++static gboolean mfc_start(gpointer data)
++{
++    NfcTagMfc* self = data;
++    self->start = 0;
++    mfc_next(self);
++    return G_SOURCE_REMOVE;
++}
++
++static void mfc_cancel(NfcTagMfc* self)
++{
++    if (self->start) { g_source_remove(self->start); self->start = 0; }
++    if (self->tx) {
++        guint tx = self->tx;
++        self->tx = 0;
++        nfc_target_cancel_transmit(self->tag.target, tx);
++    }
++    if (self->seq) { nfc_target_sequence_free(self->seq); self->seq = NULL; }
++}
++static void mfc_gone(NfcTag* tag)
++{
++    nfc_tag_ref(tag);
++    mfc_cancel((NfcTagMfc*)tag);
++    if (((NfcTagMfc*)tag)->write) mfc_write_abort(((NfcTagMfc*)tag)->write,"Card removed");
++    NFC_TAG_CLASS(nfc_tag_mfc_parent_class)->gone(tag);
++    nfc_tag_unref(tag);
++}
++static void mfc_finalize(GObject* object)
++{
++    NfcTagMfc* self = (NfcTagMfc*)object;
++    mfc_cancel(self);
++    g_byte_array_unref(self->bytes);
++    G_OBJECT_CLASS(nfc_tag_mfc_parent_class)->finalize(object);
++}
++static void nfc_tag_mfc_init(NfcTagMfc* self)
++{
++    self->bytes = g_byte_array_new();
++    self->tag.type = NFC_TAG_TYPE_MIFARE_CLASSIC;
++}
++static void nfc_tag_mfc_class_init(NfcTagMfcClass* klass)
++{
++    klass->gone = mfc_gone;
++    G_OBJECT_CLASS(klass)->finalize = mfc_finalize;
++}
++NfcTag* nfc_tag_mfc_new(NfcTarget* target, const NfcParamPollA* poll_a)
++{
++    NfcTagMfc* self;
++    NfcParamPoll poll = {0};
++    if (!target || !poll_a || poll_a->sel_res != 8 || poll_a->nfcid1.size < 4) return NULL;
++    self = g_object_new(nfc_tag_mfc_get_type(), NULL);
++    poll.a = *poll_a;
++    nfc_tag_init_base(&self->tag, target, &poll);
++    self->seq = nfc_target_sequence_new(target);
++    self->start = g_idle_add(mfc_start, self);
++    return &self->tag;
++}
++
++/* Preflight every affected data block before any write. Commit the TLV length
++ * last so an interrupted operation cannot advertise a partial NDEF message. */
++struct mfc_write {
++    NfcTagMfc* tag;
++    NfcTargetSequence* seq;
++    guint tx, state, block_index, blocks, used;
++    guint8 image[720];
++    guint8 before[720];
++    guint8 invalid[16];
++    NfcTagMfcWriteFunc done;
++    void* data;
++};
++enum {W_AUTH, W_ACCESS, W_READ, W_INVALIDATE_AUTH, W_INVALIDATE, W_INVALIDATE_CHECK, W_BODY_AUTH, W_BODY,
++      W_COMMIT_AUTH, W_COMMIT, W_VERIFY_AUTH, W_VERIFY};
++static void mfc_write_next(MfcWrite* w);
++static void mfc_write_abort(MfcWrite* w, const char* reason)
++{
++    NfcTagMfc* self=w->tag;
++    self->write=NULL;
++    if (w->tx) nfc_target_cancel_transmit(self->tag.target,w->tx);
++    nfc_target_sequence_free(w->seq);
++    w->done(&self->tag,!reason,reason,w->data);
++    g_free(w);
++    nfc_tag_unref(&self->tag);
++}
++static guint mfc_write_block(MfcWrite* w)
++{
++    return w->tag->sectors[w->block_index/3]*4+w->block_index%3;
++}
++static gboolean mfc_write_ack(const guint8* p, guint len)
++{
++    /* NXP legacy extension preserves a three-byte ACK response and replaces
++     * its exchange discriminator with NFCSTATUS_SUCCESS. Reject all NACKs. */
++    return (len==1 && p[0]==0x0a) ||
++        (len==3 && p[0]==0 && p[1]==0x0a && (p[2]==0 || p[2]==0x14));
++}
++static void mfc_write_response(NfcTarget* target,NFC_TRANSMIT_STATUS status,
++    const void* data,guint len,void* user_data)
++{
++    MfcWrite* w=user_data;
++    const guint8* p=data;
++    w->tx=0;
++    if (!w->tag->tag.present || status!=NFC_TRANSMIT_STATUS_OK) {
++        mfc_write_abort(w,"Transport failure or card removed"); return;
++    }
++    switch(w->state) {
++    case W_AUTH: case W_INVALIDATE_AUTH: case W_BODY_AUTH: case W_COMMIT_AUTH: case W_VERIFY_AUTH:
++        if (len!=1 || p[0]) {mfc_write_abort(w,"Authentication failed");return;}
++        w->state = w->state==W_AUTH ? W_ACCESS : w->state==W_INVALIDATE_AUTH ? W_INVALIDATE : w->state==W_BODY_AUTH ? W_BODY :
++            w->state==W_COMMIT_AUTH ? W_COMMIT : W_VERIFY;
++        break;
++    case W_ACCESS:
++        if (len!=16 || !mfc_access_writable(p)) {
++            mfc_write_abort(w,"NDEF sector is read-only or has unsupported access conditions");return;
++        }
++        w->state=W_READ;
++        break;
++    case W_READ:
++        if(len!=16) {mfc_write_abort(w,"Short preflight read");return;}
++        memcpy(w->before+w->block_index*16,p,16);
++        if (++w->block_index==w->blocks) {
++            /* Preserve bytes outside the new message, and require the existing
++             * NDEF TLV at offset zero. Proprietary preceding TLVs are untouched. */
++            if(w->before[0]!=3) {mfc_write_abort(w,"Unsupported TLV layout");return;}
++            {
++                guint old_header=w->before[1]==255 ? 4 : 2;
++                guint old_size=old_header==4 ? ((guint)w->before[2]<<8)|w->before[3] : w->before[1];
++                guint old_end=old_header+old_size,i;
++                if(old_end>w->tag->count*48) {
++                    mfc_write_abort(w,"Invalid existing TLV length");return;
++                }
++                /* Growing a message may consume only NULL TLVs and its
++                 * terminator, never a following proprietary TLV or data. */
++                for(i=old_end;i<w->used;i++) {
++                    /* A Terminator ends the TLV stream. Bytes after it are
++                     * unused storage, including tails of previous messages. */
++                    if(w->before[i]==0xfe) break;
++                    if(w->before[i]) {
++                        mfc_write_abort(w,"Following TLV would be overwritten");return;
++                    }
++                }
++            }
++            memcpy(w->image+w->used,w->before+w->used,w->blocks*16-w->used);
++            memcpy(w->invalid,w->before,16);
++            w->invalid[1]=0;w->invalid[2]=0xfe;
++            w->block_index=0;w->state=W_INVALIDATE_AUTH;
++        } else if (w->block_index%3==0) w->state=W_AUTH;
++        break;
++    case W_INVALIDATE:
++        if (!mfc_write_ack(p,len)) {mfc_write_abort(w,"Invalidation not acknowledged");return;}
++        w->state=W_INVALIDATE_CHECK;
++        break;
++    case W_INVALIDATE_CHECK:
++        if(len!=16 || memcmp(p,w->invalid,16)) {
++            mfc_write_abort(w,"Invalidation read-back mismatch");return;
++        }
++        w->block_index=w->blocks>1 ? 1 : 0;
++        w->state=w->blocks>1 ? W_BODY_AUTH : W_COMMIT_AUTH;
++        break;
++    case W_BODY:
++        if (!mfc_write_ack(p,len)) {mfc_write_abort(w,"Write not acknowledged");return;}
++        if (++w->block_index==w->blocks) {
++            w->block_index=0;w->state=W_COMMIT_AUTH;
++        } else if(w->block_index%3==0) w->state=W_BODY_AUTH;
++        break;
++    case W_COMMIT:
++        if (!mfc_write_ack(p,len)) {mfc_write_abort(w,"Commit not acknowledged");return;}
++        w->state=W_VERIFY_AUTH;w->block_index=0;
++        break;
++    case W_VERIFY:
++        if(len!=16 || memcmp(p,w->image+w->block_index*16,16)) {
++            mfc_write_abort(w,"Read-back mismatch");return;
++        }
++        if(++w->block_index==w->blocks) {mfc_write_abort(w,NULL);return;}
++        if(w->block_index%3==0) w->state=W_VERIFY_AUTH;
++        break;
++    }
++    mfc_write_next(w);
++}
++static void mfc_write_next(MfcWrite* w)
++{
++    guint8 cmd[18]={0};guint size=2;
++    guint block=mfc_write_block(w);
++    const NfcParamPollA* poll=&nfc_tag_param(&w->tag->tag)->a;
++    switch(w->state) {
++    case W_AUTH:case W_INVALIDATE_AUTH:case W_BODY_AUTH:case W_COMMIT_AUTH:case W_VERIFY_AUTH:
++        cmd[0]=0x60;cmd[1]=block;
++        memcpy(cmd+2,poll->nfcid1.bytes+poll->nfcid1.size-4,4);
++        memcpy(cmd+6,ndef_key,6);size=12;break;
++    case W_ACCESS:
++        cmd[0]=0x30;cmd[1]=(block/4)*4+3;break;
++    case W_READ:case W_VERIFY:case W_INVALIDATE_CHECK:
++        cmd[0]=0x30;cmd[1]=block;break;
++    default:
++        cmd[0]=0xa0;cmd[1]=block;size=18;
++        memcpy(cmd+2,w->state==W_INVALIDATE ? w->invalid : w->image+w->block_index*16,16);
++        break;
++    }
++    /* Reject every trailer, MAD/manufacturer sector and out-of-range block. */
++    if(block<4 || block>62 || (block%4)==3) {
++        mfc_write_abort(w,"Invalid write plan");return;
++    }
++    w->tx=nfc_target_transmit(w->tag->tag.target,cmd,size,w->seq,
++        mfc_write_response,NULL,w);
++    if(!w->tx) mfc_write_abort(w,"Cannot submit NFC command");
++}
++
++gboolean nfc_tag_mfc_write_ndef(NfcTag* tag,const void* data,guint size,
++    NfcTagMfcWriteFunc done,void* user_data)
++{
++    NfcTagMfc* self;MfcWrite* w;guint header=size<255 ? 2 : 4;
++    if(!nfc_tag_mfc_can_write(tag) || !tag->present || !done || !size || size>716 || !data)
++        return FALSE;
++    self=(NfcTagMfc*)tag;
++    if(self->write || self->seq || self->tx || size+header+1>self->count*48)
++        return FALSE;
++    w=g_new0(MfcWrite,1);w->tag=(NfcTagMfc*)nfc_tag_ref(tag);
++    w->seq=nfc_target_sequence_new(tag->target);w->done=done;w->data=user_data;
++    w->used=size+header+1;w->blocks=(w->used+15)/16;
++    w->image[0]=3;
++    if(size<255) w->image[1]=size;
++    else {w->image[1]=255;w->image[2]=size>>8;w->image[3]=size;}
++    memcpy(w->image+header,data,size);w->image[header+size]=0xfe;
++    self->write=w;
++    mfc_write_next(w);
++    return TRUE;
++}
+diff --git a/unit/core_tag_mfc/test_core_tag_mfc.c b/unit/core_tag_mfc/test_core_tag_mfc.c
+new file mode 100644
+index 0000000..02c4b88
+--- /dev/null
++++ b/unit/core_tag_mfc/test_core_tag_mfc.c
+@@ -0,0 +1,229 @@
++/* SPDX-License-Identifier: BSD-3-Clause
++ * Copyright (C) 2026 Actinis */
++#include "nfc_tag_p.h"
++#include "nfc_target_p.h"
++#include "test_target.h"
++#include <string.h>
++
++static const guint8 uid[] = {1,2,3,4};
++static const guint8 authmad[] = {0x60,0,1,2,3,4,0xa0,0xa1,0xa2,0xa3,0xa4,0xa5};
++static const guint8 authndef[] = {0x60,4,1,2,3,4,0xd3,0xf7,0xd3,0xf7,0xd3,0xf7};
++static const guint8 ok[] = {0};
++static void addread(NfcTarget* t, guint block, const guint8* data, guint len)
++{
++    guint8 cmd[] = {0x30,block};
++    test_target_add_data(t,cmd,sizeof(cmd),data,len);
++}
++static NfcTag* tagnew(NfcTarget* t)
++{
++    NfcParamPollA p = {8,{uid,sizeof(uid)}};
++    return nfc_tag_mfc_new(t,&p);
++}
++static void drain(NfcTag* tag)
++{
++    gint64 until = g_get_monotonic_time()+2000000;
++    while (!(tag->flags & NFC_TAG_FLAG_INITIALIZED) && g_get_monotonic_time()<until)
++        g_main_context_iteration(NULL, FALSE);
++    g_assert_true((tag->flags & NFC_TAG_FLAG_INITIALIZED) != 0);
++}
++static NfcTarget* prepare(int kind)
++{
++    NfcTarget* t = test_target_new_tech(NFC_TECHNOLOGY_A,0);
++    guint8 mad[32] = {0};
++    guint8 trailer[16] = {0};
++    guint8 data[16] = {3,11,0xd1,1,7,0x54,2,0x65,0x6e,0x74,0x65,0x73,0x74,0xfe};
++    mad[0] = 0x00; /* overwritten with independently calculated CRC below */
++    mad[2] = 3;mad[3] = 0xe1;
++    mad[0] = 0xdb;
++    trailer[9] = 0xc1;
++    if (kind == 1) mad[0] ^= 1;
++    if (kind == 2) trailer[9] = 0xc2; /* MAD2 not supported by Classic 1K */
++    test_target_add_data(t,authmad,sizeof(authmad),ok,sizeof(ok));
++    addread(t,1,mad,16);addread(t,2,mad+16,16);addread(t,3,trailer,16);
++    if (kind != 1 && kind != 2) {
++        const guint8 fail[] = {1};
++        test_target_add_data(t,authndef,sizeof(authndef),kind==3?fail:ok,1);
++        if (kind != 3) {
++            if (kind == 4) {data[1]=0xff;data[2]=0xff;data[3]=0xff;}
++            const guint8 access[16]={0,0,0,0,0,0,0x7f,0x07,0x88,0x40};
++            addread(t,7,access,16);
++            addread(t,4,data,kind==5?15:16);
++        }
++    }
++    return t;
++}
++static void scenario(int kind)
++{
++    NfcTarget* t=prepare(kind);NfcTag* tag=tagnew(t);
++    g_assert_nonnull(tag);drain(tag);
++    if (kind) g_assert_null(tag->ndef);else g_assert_nonnull(tag->ndef);
++    g_assert_cmpuint(test_target_tx_remaining(t),==,0);
++    nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void reference_crc(void)
++{
++    const guint8 mad[32] = {0x89,0x1,0x1,0x8,0x1,0x8,0x1,0x8,0x0,0x0,0x0,0x0,0x0,0x0,0x4,0x0,0x3,0x10,0x3,0x10,0x2,0x10,0x2,0x10,0x0,0x0,0x0,0x0,0x0,0x0,0x11,0x30};
++    g_assert_cmpuint(nfc_tag_mfc_mad_crc(mad),==,0x89);
++}
++static void valid(void){scenario(0);}static void crc(void){scenario(1);}
++static void gpb(void){scenario(2);}static void auth(void){scenario(3);}
++static void oversized(void){scenario(4);}static void shortread(void){scenario(5);}
++static void gone(void)
++{
++    NfcTarget* t=prepare(0);NfcTag* tag=tagnew(t);
++    nfc_target_gone(t);g_assert_false(tag->present);
++    while(g_main_context_iteration(NULL,FALSE));
++    nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void cancelled(void)
++{
++    NfcTarget* t=prepare(0);NfcTag* tag=tagnew(t);
++    g_main_context_iteration(NULL,FALSE);
++    nfc_tag_unref(tag);
++    while(g_main_context_iteration(NULL,FALSE));
++    nfc_target_unref(t);
++}
++static void txfail(void)
++{
++    NfcTarget* t=test_target_new_tech(NFC_TECHNOLOGY_A,-1);NfcTag* tag=tagnew(t);
++    drain(tag);g_assert_null(tag->ndef);nfc_tag_unref(tag);nfc_target_unref(t);
++}
++
++typedef struct result {gboolean called,ok;} Result;
++static void write_done(NfcTag* t,gboolean ok,const char* reason,void* data)
++{Result* r=data;r->called=TRUE;r->ok=ok;}
++static void addauth(NfcTarget* t,guint block,gboolean success)
++{
++    guint8 cmd[12];const guint8 fail=1;
++    memcpy(cmd,authndef,12);cmd[1]=block;
++    test_target_add_data(t,cmd,12,success?ok:&fail,1);
++}
++static void addwrite(NfcTarget* t,guint block,const guint8* bytes,gboolean success)
++{
++    guint8 cmd[18]={0xa0,block};const guint8 ack[3]={0,success?0x0a:0x00,0x14};
++    memcpy(cmd+2,bytes,16);test_target_add_data(t,cmd,18,ack,3);
++}
++static void write_scenario(int kind)
++{
++    NfcTarget* t=prepare(0);NfcTag* tag=tagnew(t);Result r={0};
++    guint8 old[16]={3,11,0xd1,1,7,0x54,2,0x65,0x6e,0x74,0x65,0x73,0x74,0xfe};
++    guint8 raw[11]={0xd1,1,7,0x54,2,0x65,0x6e,0x74,0x65,0x73,0x58};
++    guint8 fresh[16]={3,11},invalid[16],access[16]={0,0,0,0,0,0,0x7f,7,0x88,0x40};
++    drain(tag);g_assert_true(nfc_tag_mfc_can_write(tag));
++    memcpy(fresh+2,raw,11);fresh[13]=0xfe;
++    memcpy(invalid,old,16);invalid[1]=0;invalid[2]=0xfe;
++    if(kind==1) access[9]=0x43;
++    if(kind==2) access[6]^=1;
++    addauth(t,4,kind!=3);
++    if(kind!=3) {
++        addread(t,7,access,16);
++        if(kind!=1 && kind!=2) {
++            addread(t,4,old,kind==4?15:16);
++            if(kind!=4) {
++                addauth(t,4,TRUE);addwrite(t,4,invalid,kind!=5);
++                if(kind!=5) {
++                    addread(t,4,invalid,16);
++                    addauth(t,4,TRUE);addwrite(t,4,fresh,TRUE);
++                    addauth(t,4,TRUE);addread(t,4,kind==6?old:fresh,16);
++                }
++            }
++        }
++    }
++    g_assert_true(nfc_tag_mfc_write_ndef(tag,raw,11,write_done,&r));
++    g_assert_false(nfc_tag_mfc_write_ndef(tag,raw,11,write_done,&r));
++    gint64 until=g_get_monotonic_time()+2000000;
++    while(!r.called && g_get_monotonic_time()<until)g_main_context_iteration(NULL,FALSE);
++    g_assert_true(r.called);g_assert_cmpint(r.ok,==,!kind);
++    g_assert_cmpuint(test_target_tx_remaining(t),==,0);
++    nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void write_ok(void){write_scenario(0);}
++static void write_ro(void){write_scenario(1);}
++static void write_access(void){write_scenario(2);}
++static void write_auth(void){write_scenario(3);}
++static void write_short(void){write_scenario(4);}
++static void write_nack(void){write_scenario(5);}
++static void write_verify(void){write_scenario(6);}
++static void write_gone(void)
++{
++    NfcTarget* t=prepare(0);NfcTag* tag=tagnew(t);Result r={0};
++    const guint8 raw[11]={0xd1,1,7,0x54,2,'e','n','t','e','s','t'};
++    drain(tag);addauth(t,4,TRUE);
++    g_assert_true(nfc_tag_mfc_write_ndef(tag,raw,11,write_done,&r));
++    nfc_target_gone(t);g_assert_true(r.called);g_assert_false(r.ok);
++    while(g_main_context_iteration(NULL,FALSE));
++    nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void write_bounds(void)
++{
++    NfcTarget* t=prepare(0);NfcTag* tag=tagnew(t);Result r={0};guint8 data[720]={0};
++    drain(tag);
++    g_assert_false(nfc_tag_mfc_write_ndef(tag,data,49,write_done,&r));
++    g_assert_false(nfc_tag_mfc_write_ndef(tag,data,0,write_done,&r));
++    g_assert_false(r.called);nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void write_multi_case(int kind)
++{
++    NfcTarget* t=test_target_new_tech(NFC_TECHNOLOGY_A,0);NfcTag* tag;Result r={0};
++    guint8 mad[32]={0},gpb[16]={0},access[16]={0,0,0,0,0,0,0x7f,7,0x88,0x40};
++    guint8 old[80]={3,11,0xd1,1,7,0x54,2,'e','n','t','e','s','t',0xfe};
++    guint8 raw[67]={0xd1,1,63,'T',2,'e','n'},fresh[80]={3,67},invalid[16];
++    guint i;
++    mad[2]=mad[4]=3;mad[3]=mad[5]=0xe1;mad[0]=nfc_tag_mfc_mad_crc(mad);gpb[9]=0xc1;
++    test_target_add_data(t,authmad,12,ok,1);addread(t,1,mad,16);addread(t,2,mad+16,16);addread(t,3,gpb,16);
++    addauth(t,4,TRUE);addread(t,7,access,16);addread(t,4,old,16);
++    tag=tagnew(t);drain(tag);
++    if(kind==1) old[13]=0xfd;
++    if(kind==2) old[14]=0xfd;
++    memset(raw+7,'x',60);memcpy(fresh+2,raw,67);fresh[69]=0xfe;
++    memcpy(invalid,old,16);invalid[1]=0;invalid[2]=0xfe;
++    addauth(t,4,TRUE);addread(t,7,access,16);
++    for(i=0;i<5;i++) {
++        if(i==3){addauth(t,8,TRUE);addread(t,11,access,16);}
++        addread(t,4+(i/3)*4+i%3,old+i*16,16);
++    }
++    if(kind!=1) {
++    addauth(t,4,TRUE);addwrite(t,4,invalid,TRUE);addread(t,4,invalid,16);
++    addauth(t,5,TRUE);
++    for(i=1;i<5;i++) {
++        if(i==3)addauth(t,8,TRUE);
++        addwrite(t,4+(i/3)*4+i%3,fresh+i*16,TRUE);
++    }
++    addauth(t,4,TRUE);addwrite(t,4,fresh,TRUE);addauth(t,4,TRUE);
++    for(i=0;i<5;i++) {
++        if(i==3)addauth(t,8,TRUE);
++        addread(t,4+(i/3)*4+i%3,fresh+i*16,16);
++    }
++    }
++    g_assert_true(nfc_tag_mfc_write_ndef(tag,raw,67,write_done,&r));
++    gint64 until=g_get_monotonic_time()+2000000;
++    while(!r.called && g_get_monotonic_time()<until)g_main_context_iteration(NULL,FALSE);
++    g_assert_true(r.called);g_assert_cmpint(r.ok,==,kind!=1);g_assert_cmpuint(test_target_tx_remaining(t),==,0);
++    nfc_tag_unref(tag);nfc_target_unref(t);
++}
++static void write_multi(void){write_multi_case(0);}
++static void write_conflict(void){write_multi_case(1);}
++static void write_padding(void){write_multi_case(2);}
++int main(int argc,char** argv)
++{
++    g_test_init(&argc,&argv,NULL);
++    g_test_add_func("/mfc/nxp-reference-crc",reference_crc);
++    g_test_add_func("/mfc/ndef",valid);g_test_add_func("/mfc/mad-crc",crc);
++    g_test_add_func("/mfc/gpb",gpb);g_test_add_func("/mfc/auth-failed",auth);
++    g_test_add_func("/mfc/oversized",oversized);g_test_add_func("/mfc/short-read",shortread);
++    g_test_add_func("/mfc/gone",gone);g_test_add_func("/mfc/cancelled",cancelled);
++    g_test_add_func("/mfc/tx-failed",txfail);
++    g_test_add_func("/mfc/write",write_ok);
++    g_test_add_func("/mfc/write-read-only",write_ro);
++    g_test_add_func("/mfc/write-access-corrupt",write_access);
++    g_test_add_func("/mfc/write-auth",write_auth);
++    g_test_add_func("/mfc/write-short-read",write_short);
++    g_test_add_func("/mfc/write-nack",write_nack);
++    g_test_add_func("/mfc/write-verify",write_verify);
++    g_test_add_func("/mfc/write-gone",write_gone);
++    g_test_add_func("/mfc/write-bounds",write_bounds);
++    g_test_add_func("/mfc/write-cross-sector",write_multi);
++    g_test_add_func("/mfc/write-preserve-following-tlv",write_conflict);
++    g_test_add_func("/mfc/write-grow-after-terminator",write_padding);
++    return g_test_run();
++}
+diff --git a/unit/core_tag_mfc/Makefile b/unit/core_tag_mfc/Makefile
+new file mode 100644
+index 0000000..c9c5cb4
+--- /dev/null
++++ b/unit/core_tag_mfc/Makefile
+@@ -0,0 +1,3 @@
++EXE = test_core_tag_mfc
++COMMON_SRC = test_main.c test_target.c
++include ../common/Makefile

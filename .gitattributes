@@ -1,2 +1,5 @@
 # Preserve imported upstream headers byte-for-byte, including their whitespace.
 device/gnss/include/** whitespace=-blank-at-eol,-blank-at-eof
+
+# Unified-diff context prefixes are part of the patch format.
+device/nfc/*.patch whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab

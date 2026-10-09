@@ -1,0 +1,78 @@
+{
+  "status": "experimental; not consumed by the production build",
+  "sources": [
+    {
+      "component": "hal",
+      "url": "https://github.com/NXPNFCProject/nfcandroid_nfc_hidlimpl.git",
+      "commit": "583f1952fea1cf3a51ee9f609cbe61b2aed4e56c",
+      "patch": "hal.patch",
+      "patch_sha256": "823b9d90256f1c6065ee72b3b418b7b70f5f45f8b1a035afbaa9b3924b988696"
+    },
+    {
+      "component": "binder-plugin",
+      "url": "https://github.com/mer-hybris/nfcd-binder-plugin.git",
+      "commit": "25a67ba973dc118d14625c2d66f75ca0afaa1bfc",
+      "patch": "binder-plugin.patch",
+      "patch_sha256": "e01ab371dcd164d9e454ff73b9169f03e61019ac9a2848862d93313d7675d339"
+    },
+    {
+      "component": "nci-plugin",
+      "url": "https://github.com/mer-hybris/libnciplugin.git",
+      "commit": "0b543f1aa1f2d88fb14c38c15c8a6beb6ce13b0f",
+      "patch": "nci-plugin.patch",
+      "patch_sha256": "80e9f5261e73a751bed60f2066c27a250a085cc8018f61dc022636c7e60c1ec8"
+    },
+    {
+      "component": "ncicore",
+      "url": "https://github.com/mer-hybris/libncicore.git",
+      "commit": "2e91ac7247dd2dfa6e075f5ac05ef2c7b0b5e356",
+      "patch": "ncicore.patch",
+      "patch_sha256": "5ed5ceedd31a08367ff52010b6a628858f242ab4832c3833ca04be6f9fe343ea"
+    },
+    {
+      "component": "nfcd",
+      "url": "https://github.com/sailfishos/nfcd.git",
+      "commit": "aca4955b895a1eaefae4964ded1e0fcc6ed22eaf",
+      "patch": "nfcd.patch",
+      "patch_sha256": "856731b01245cdde8479f999e5422d4cfa026e6cab721f6f25acc743b5fd8a86"
+    }
+  ],
+  "development_headers": [
+    {
+      "name": "libgbinder-dev",
+      "version": "1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libgbinder/libgbinder-dev_1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2_arm64.deb",
+      "sha256": "c4deeef7bbd3c92b064f783d4a50b7cac8ad5c313a1385a4c47dfa2a6d7ef759"
+    },
+    {
+      "name": "libglibutil-dev",
+      "version": "1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libglibutil/libglibutil-dev_1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2_arm64.deb",
+      "sha256": "c599a5846f5206a42568d0d78c601a09adb38f4d4ee4740a44e6a05f84222fbd"
+    },
+    {
+      "name": "libncicore-dev",
+      "version": "1.1.32-0ubports1~20260529000806.5~584f994+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libncicore/libncicore-dev_1.1.32-0ubports1~20260529000806.5~584f994+ubports24.04.2_arm64.deb",
+      "sha256": "9378b56c4db5f2a4ffdc320d0ac4d762f2ba66b91eca4c67591d3dee005e8e88"
+    },
+    {
+      "name": "libnciplugin-dev",
+      "version": "1.2.2-0ubports1~20260414043901.6~f398ddb+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libnciplugin/libnciplugin-dev_1.2.2-0ubports1~20260414043901.6~f398ddb+ubports24.04.2_arm64.deb",
+      "sha256": "620fa0d633642813b033e26b9ce80dbb9d2fa94f7c6dabc174f8e91568e3b00b"
+    },
+    {
+      "name": "libnfcd-dev",
+      "version": "1.2.6-0ubports1~20260529000936.8~86b1be1+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/n/nfcd/libnfcd-dev_1.2.6-0ubports1~20260529000936.8~86b1be1+ubports24.04.2_arm64.deb",
+      "sha256": "2d27d08b40f0396911420bb8ddf63abb0911540f6625e346fc62af36b126c1c5"
+    },
+    {
+      "name": "libnfcdef-dev",
+      "version": "1.1.0-0ubports1~20260413221115.2~36ef464+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libnfcdef/libnfcdef-dev_1.1.0-0ubports1~20260413221115.2~36ef464+ubports24.04.2_arm64.deb",
+      "sha256": "f953ae7d64fcfd0a38d9d9a50583524fa30fe16178e0e31cd2d4eee7e7fccf58"
+    }
+  ]
+}
