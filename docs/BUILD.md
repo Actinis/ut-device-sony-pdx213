@@ -78,3 +78,9 @@ no automatic release publication, tag creation, flashing or OTA.
 NFC dependencies, runtime layout and hardware evidence are documented in
 [device/nfc/README.md](../device/nfc/README.md). The six NFC binaries and their
 input/output report are mandatory artifacts; incomplete NFC builds cannot be packaged.
+
+Local qualification: clean checkout `37806b6` built as `nfc-integrated-005`;
+full kernel/boot/GNSS/NFC build, 22 ARM64 Classic tests and userdata/vbmeta
+assembly passed. Packaged NFC hashes, plugin links and service enablement were
+checked. NFC runtime/read/off-on checks passed on XQ-BT52; the assembled images
+have not been flashed. See the NFC qualification table for untested functions.

@@ -7,12 +7,21 @@ the resulting images on hardware.
 
 ## Qualification on XQ-BT52
 
+The installed NFC binaries come from the clean `nfc-integrated-005` build of
+source commit `37806b6`. All six file hashes matched the build report. The 22
+synthetic tests passed both under ARM64 QEMU and natively on Sony. The adapter
+registered through the normal service with no automatic restarts. Local userdata
+assembly passed, and packaged NFC hashes, plugin links, hook, service override
+and service enablement were checked. These images have not been installed or
+qualified for installation/restoration. GitHub Actions has not run these local
+commits; host checks and the local full build are the available evidence.
+
 | Operation | Evidence | Limit |
 | --- | --- | --- |
-| Classic 1K NDEF Text reading | Real card read and rediscovery; reader worked after reboot | One public NDEF-formatted card |
-| Classic 1K UTF-8 Text writing | Real write, independent reread, original restoration and byte-for-byte comparison passed | Existing writable public NDEF mapping only; writer after reboot untested |
-| NFC off/on | Three power cycles and reread passed | Screen unlocked during tests |
-| ISO-DEP discovery/exchange | Residence-permit card remained present for 15 seconds; bank card passed 104 consecutive presence checks without interface errors in a repeated test | No protected applications read; earlier transient RF timeouts have no established cause |
+| Classic 1K NDEF Text reading | Clean-built installed stack: byte-for-byte original match, rediscovery and reread after daemon restart passed; adaptation reader after reboot qualified | One public NDEF-formatted card; full reboot of the clean-built set not tested |
+| Classic 1K UTF-8 Text writing | Real write, independent reread, original restoration and byte-for-byte comparison passed | Existing writable public NDEF mapping only; physical write on the clean-built binary set and writer after reboot untested |
+| NFC off/on | Clean-built installed stack: three power cycles, each reread matched original; StopPollLoop preserved polling under the Noble service setting | Screen unlocked during tests |
+| ISO-DEP discovery/exchange | Adaptation qualification: residence-permit card remained present for 15 seconds; bank card passed 104 consecutive presence checks without interface errors in a repeated test | No protected applications read; earlier transient RF timeouts have no established cause |
 | NTAG/Type 2, Type 3, Type 4 NDEF, ISO15693 | No physical qualification | ISO-DEP detection is not Type 4 NDEF qualification |
 | Formatting, other write record types, private keys, card emulation, payments | Not qualified | No payment application is provided |
 | Suspend/resume, screen-lock behavior, long-term reliability | Not qualified | Short foreground tests do not establish these |
