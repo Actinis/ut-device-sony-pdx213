@@ -30,3 +30,10 @@ The tested kernel was compiled and installed with the existing prototype
 ramdisk and modules. A clean full image build from the updated lock and its
 installation remain unqualified. Full system suspend, unplugged battery drain,
 pocket rejection, other firmware/variants and long-duration use remain untested.
+
+A passive controller trace during the requested single-tap/double-tap sequence
+contained one gesture event (subtype 0, ID 15) and no coordinate events.
+No distinct single-tap enable command was found in the sec_ts_lena source.
+Single-tap wake is therefore not enabled or qualified; this observation does
+not rule out undocumented firmware support. No firmware registers were changed
+for this passive probe.
