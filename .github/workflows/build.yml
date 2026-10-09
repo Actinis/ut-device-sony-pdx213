@@ -59,7 +59,7 @@ jobs:
       - name: Install host build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc qemu-user unzip kmod
+          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc qemu-user unzip kmod e2fsprogs
       - name: Verify and extract the locked NDK
         run: |
           python3 - <<'PYTHON'
@@ -81,7 +81,7 @@ jobs:
           python3 tools/build.py --kernel-source "$GITHUB_WORKSPACE/kernel" \
             --mkbootimg-source "$GITHUB_WORKSPACE/mkbootimg" \
             --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
-            --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs
+            --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs --debugfs /usr/sbin/debugfs
       - name: Archive kernel and boot build results
         run: |
           build="$UT_PORTS_DATA_DIR/builds/pdx213/ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"

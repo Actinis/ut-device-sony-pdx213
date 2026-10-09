@@ -1,7 +1,7 @@
 # Noble source build
 
 Use Linux x86_64 with GNU make, a C compiler, flex, bison, bc, OpenSSL/ELF
-headers, Python 3, tar, unzip, readelf, kmod and qemu-aarch64. For full local image
+headers, Python 3, tar, unzip, readelf, kmod, debugfs and qemu-aarch64. For full local image
 assembly also install fakeroot, mksquashfs, mke2fs, img2simg and avbtool.
 
 ```sh
@@ -21,12 +21,13 @@ python3 tools/build.py \
   --kernel-source /path/to/ut-kernel-sony-msm \
   --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
   --mkbootimg-source /path/to/mkbootimg \
-  --build-id clean-noble-001 --jobs 4 --fetch-inputs
+  --build-id clean-noble-001 --jobs 4 --fetch-inputs \
+  --debugfs /path/to/debugfs
 ```
 
 The build verifies the exact Git commits, tracked input hashes, Noble rootfs
-and initrd checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
-and Android compatibility library; stages ext4 tools from the locked rootfs;
+initrd and GSI checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
+Android compatibility library and GNSS libraries; stages ext4 tools from the locked rootfs;
 creates the release boot image; and executes its BusyBox shell under QEMU.
 `input-identity.json` and the schema-2 `build-report.json` bind the build ID,
 clean device commit, exact lock checksum and complete dependency identity.
@@ -38,7 +39,7 @@ build, not full userdata assembly or hardware qualification. AppArmor and PMF
 fixes are in-tree; do not run an apply-backport script.
 
 CI retains kernel/boot build results for 30 days as a GitHub Actions artifact,
-including boot, DTBO, Image.gz-dtb, modules, helpers, build-report and input
+including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS libraries, build-report and input
 identity. The tar archive preserves executable modes. These are experimental
 build outputs, not an installation release; vendor/OEM and userdata are excluded.
 
@@ -55,7 +56,7 @@ fakeroot python3 tools/package_userdata.py --build-id clean-noble-001 \
 
 Before creating any packaging output, the command requires a completed schema-2
 report for the current clean checkout, lock and selected build ID. It verifies
-the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers
+the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers/GNSS libraries
 and kernel modules. Missing results, extra files, changed helpers, mixed module
 releases, linked output directories and older report formats are rejected.
 Build directories are not interchangeable, even when their filenames match.

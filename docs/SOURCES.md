@@ -1,6 +1,6 @@
 # Locked inputs and build scope
 
-Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 2 is
+Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 3 is
 validated by `tools/sources_lock.py`, CI, the build and release metadata tool.
 `locked` means that the listed input identities are pinned, not that all inputs
 are downloadable or a complete installation has been reproduced.
@@ -49,3 +49,15 @@ No personal keys, device serials, modem identities, backups, private payloads,
 raw device logs, OEM/vendor binaries or extracted Android/Ubuntu images are
 source inputs in Git. Runtime camera patching uses hash-checked owner-supplied
 OEM bytes; the repository contains only the guard implementation.
+
+## GNSS inputs
+
+The `gnss` derived entry pins every tracked adaptation/header file and exact
+upstream origin commits in `device/gnss/ORIGINS.json`. Generated HIDL headers
+are public build inputs; no local Android checkout or generator is required.
+The Android library dependencies and original platform API are extracted from
+the locked GSI using an explicitly supplied host `debugfs`. Its original library
+is preserved under a renamed SONAME to retain sensors and other platform APIs.
+The Linux assistance library links only glibc from the locked Noble rootfs.
+LGPL author notices and licence, Apache-2.0 licence and header notices are retained.
+No modem firmware, device-specific APN, subscriber ID or private GNSS log is included.

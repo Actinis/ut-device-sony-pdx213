@@ -27,6 +27,7 @@ class CompletedBuild(unittest.TestCase):
         manifest.prepare_build(self.build, self.identity)
         out = self.build / 'out'
         for name in manifest.REQUIRED_ARTIFACTS:
+            (out / name).parent.mkdir(parents=True,exist_ok=True)
             (out / name).write_bytes(name.encode())
         (out / 'utxperia-reboot-bootloader').chmod(0o755)
         self.release = '4.19.248-test'

@@ -18,6 +18,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ['kernel-source','ndk','mkbootimg-source']:p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--build-id',required=True)
+    p.add_argument('--debugfs',type=Path,required=True,help='Host e2fsprogs debugfs executable')
     p.add_argument('--jobs',type=int,default=4)
     p.add_argument('--fetch-inputs',action='store_true')
     p.add_argument('--resume',action='store_true',help='Resume only the same source/input build in its existing output directory')
@@ -34,7 +35,7 @@ def main():
     if '23.1.7779620' not in (a.ndk/'source.properties').read_text():raise SystemExit('NDK r23b required')
     expected_identity=build_identity(ROOT,a.build_id,lock)
     downloads=data/'downloads';downloads.mkdir(parents=True,exist_ok=True)
-    for name in ['rootfs','initrd']:
+    for name in ['rootfs','initrd','halium_gsi']:
         entry=lock[name];target=downloads/entry['filename']
         if not target.exists() and a.fetch_inputs:
             tmp=target.with_suffix(target.suffix+'.part')
@@ -69,6 +70,9 @@ def main():
     ubuntu=build/'ubuntu';ubuntu.mkdir(exist_ok=a.resume)
     run('tar','--no-same-owner','-xf',downloads/lock['rootfs']['filename'],'-C',ubuntu)
     if 'VERSION_ID="24.04"' not in (ubuntu/'etc/os-release').read_text():raise SystemExit('Non-Noble rootfs rejected')
+    android=build/'android-input';android.mkdir(exist_ok=a.resume)
+    run('tar','--no-same-owner','-xf',downloads/lock['halium_gsi']['filename'],'-C',android)
+    run(sys.executable,ROOT/'tools/build_gnss.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--output',out/'gnss')
     extras=build/'boot-extras'
     run(sys.executable,ROOT/'tools/stage_boot_filesystem.py','--ubuntu-root',ubuntu,'--reboot-helper',out/'utxperia-reboot-bootloader','--output',extras)
     run(sys.executable,ROOT/'tools/build_standalone_boot.py','--base',downloads/lock['initrd']['filename'],'--kernel',out/'Image.gz-dtb','--metadata',ROOT/'device/boot-metadata.json','--init',ROOT/'device/release-init','--extras',extras,'--mkbootimg',a.mkbootimg_source/'mkbootimg.py','--output',out/'boot.img')

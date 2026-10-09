@@ -1,0 +1,46 @@
+{
+  "platform_api": {
+    "url": "https://gitlab.com/ubports/development/core/platform-api.git",
+    "commit": "e6b242ae884f14c96caeda8b3c804c0bdea27c2b",
+    "scope": [
+      "android/hybris/ubuntu_application_gps_hidl_for_hybris.cpp",
+      "include/ubuntu/hardware/gps.h",
+      "include/ubuntu/visibility.h"
+    ],
+    "license": "LGPL-3.0; original author notices retained"
+  },
+  "hidl_interfaces": {
+    "url": "https://github.com/GrapheneOS/platform_hardware_interfaces",
+    "commit": "10f50d727929257755d4bc3fb59758dc10e7a37b",
+    "packages": [
+      "android.hardware.gnss@1.0",
+      "android.hardware.gnss@1.1",
+      "android.hardware.gnss@2.0",
+      "android.hardware.gnss.measurement_corrections@1.0",
+      "android.hardware.gnss.visibility_control@1.0"
+    ],
+    "license": "Apache-2.0"
+  },
+  "hidl_transport": {
+    "url": "https://android.googlesource.com/platform/system/libhidl",
+    "commit": "061055fc4dad78e5d25a77d9217001794656f16b",
+    "packages": [
+      "android.hidl.base@1.0",
+      "android.hidl.manager@1.0",
+      "android.hidl.manager@1.1",
+      "android.hidl.manager@1.2"
+    ]
+  },
+  "vndk_headers": {
+    "url": "https://android.googlesource.com/platform/prebuilts/vndk/v31",
+    "commit": "1a059a5a203352d3e0c2fd3ccff5719cc37fc340",
+    "scope": "only compilation dependencies from arm64/include; headers retain their license notices"
+  },
+  "callback_lifetime_reference": "https://gitlab.com/ubports/development/core/platform-api/-/merge_requests/18",
+  "note": "Generated HIDL headers are tracked build inputs; compiler headers come from locked NDK r23b. No proprietary libraries are stored here.",
+  "header_generator": {
+    "url": "https://android.googlesource.com/platform/system/tools/hidl",
+    "commit": "5d0e05e6535fea94a674a359102bdd42944714f4",
+    "note": "Generated headers are tracked; generation is not a build step."
+  }
+}

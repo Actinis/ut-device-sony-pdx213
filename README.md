@@ -28,3 +28,5 @@ builds require their own installation/hardware qualification.
 
 Related: [port catalog](https://github.com/Actinis/ut-ports),
 [kernel source branch](https://github.com/Actinis/ut-kernel-sony-msm/tree/main).
+
+GNSS assistance, privacy and current qualification limits: [GNSS](docs/GNSS.md).

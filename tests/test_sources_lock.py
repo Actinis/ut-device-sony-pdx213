@@ -18,3 +18,13 @@ class Lock(unittest.TestCase):
         with self.assertRaises(ValueError):module.validate(data)
         data['ubuntu_touch']='24.04';data['sources']['kernel']['commit']='0'*40
         with self.assertRaises(ValueError):module.validate(data)
+
+    def test_gnss_origin_dependencies_and_source_inventory(self):
+        root=Path(__file__).resolve().parents[1]
+        data=json.loads((root/'sources.lock.json').read_text())
+        for change in ('origin','dependency','source'):
+            bad=json.loads(json.dumps(data));gnss=bad['sources']['gnss']
+            if change=='origin':gnss['origins']['platform_api']['commit']='0'
+            if change=='dependency':gnss['dependencies'].remove('halium_gsi')
+            if change=='source':del gnss['files']['device/gnss/gnss.cpp']
+            with self.assertRaises(ValueError):module.validate(bad,root)

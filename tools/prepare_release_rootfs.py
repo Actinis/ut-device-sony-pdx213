@@ -19,6 +19,10 @@ def main():
         os.chown(dest,0,0,follow_symlinks=False)
     for source,target in [('out/libvndservicemanager-apparmor-compat.so','usr/local/lib/utxperia/libvndservicemanager-apparmor-compat.so'),('out/utxperia-reboot-bootloader','usr/bin/utxperia-reboot-bootloader')]:
         dest=root/target;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(a.artifacts/source,dest);os.chown(dest,0,0)
+    for name in ('libubuntu_application_api.so', 'libubuntu_application_old.so', 'libutxperia-gnss-assistance.so'):
+        dest=root/'usr/local/lib/utxperia/gnss'/name
+        dest.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(a.artifacts/'out/gnss'/name,dest);os.chown(dest,0,0)
     # Add only documented groups; never copy the test device's passwd/shadow.
     file=root/'etc/group';lines=[]
     additions={'android_graphics':['lightdm'],'video':['lightdm'],'render':['lightdm','phablet'],'android_input':['lightdm']}

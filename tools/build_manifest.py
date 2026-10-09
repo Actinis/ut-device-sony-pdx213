@@ -8,6 +8,8 @@ import subprocess
 REQUIRED_ARTIFACTS = {
     'Image.gz-dtb', 'dtbo.img', 'boot.img', 'boot.initrd.gz', 'boot.json',
     'utxperia-reboot-bootloader', 'libvndservicemanager-apparmor-compat.so',
+    'gnss/libubuntu_application_api.so', 'gnss/libubuntu_application_old.so',
+    'gnss/libutxperia-gnss-assistance.so',
 }
 
 

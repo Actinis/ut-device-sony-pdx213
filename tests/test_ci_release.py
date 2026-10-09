@@ -30,6 +30,7 @@ class Publication(unittest.TestCase):
                     'lock_sha256': hashlib.sha256(self.lock_bytes).hexdigest(), 'sources': self.lock['sources']}
         build_manifest.prepare_build(self.build, identity)
         for name in build_manifest.REQUIRED_ARTIFACTS:
+            (self.build/'out'/name).parent.mkdir(parents=True,exist_ok=True)
             (self.build/'out'/name).write_bytes(name.encode())
         (self.build/'out/utxperia-reboot-bootloader').chmod(0o755)
         modules = self.build/'out/modules/lib/modules/test-release'; modules.mkdir(parents=True)
