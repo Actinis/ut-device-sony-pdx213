@@ -116,9 +116,12 @@
       ],
       "targets": [
         "arch/arm64/boot/Image.gz-dtb",
-        "arch/arm64/boot/dtbo.img"
+        "arch/arm64/boot/dts/somc/lagoon-lena-pdx213_generic-overlay.dtbo"
       ],
-      "description": "Sony pdx213 device tree built from pinned kernel and pinned gitlinks; no binary DTB input"
+      "description": "Sony overlay built from pinned kernel and gitlinks, wrapped by tracked Android v0 DT table recipe: one entry, 2048-byte page field",
+      "files": {
+        "tools/dtbo_table.py": "79723966c923e9000e71fbb00d7d43528faebe2925b6df9d99f04979d5dabfb4"
+      }
     },
     "auxiliary": {
       "kind": "derived",
