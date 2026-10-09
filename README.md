@@ -12,8 +12,8 @@ An independently reproducible vendor input and an installation after complete
 stock Android restoration are still unqualified. Do not apply prototype storage
 assumptions to other models or firmware revisions.
 
-There is no universal UBports Installer integration, public image release or
-OTA channel. This source publication does not create a release tag.
+There is no universal UBports Installer integration, complete installation release or
+OTA channel. Successful main builds are published as experimental kernel/boot prereleases; version tags create draft candidates. See [publication rules](docs/RELEASING.md).
 
 - [Build and local data layout](docs/BUILD.md)
 - [Exact sources and manual inputs](docs/SOURCES.md)

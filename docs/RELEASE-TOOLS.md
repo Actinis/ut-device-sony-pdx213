@@ -17,3 +17,9 @@ gh release create pdx213-noble-port-v0.1.0 --repo Actinis/ut-device-sony-pdx213 
 ```
 
 Do not run this example until placeholders, pins, installation instructions and actual device results are complete. The draft command is documentation, not an automatic publication workflow.
+
+## Automatic kernel/boot publication
+
+`publish_ci_release.py` implements the verified CI publication path described in [RELEASING.md](RELEASING.md). It reads the original run's exact lock and verifies its archived build identity before preparing assets. It does not use this checkout's dependency pins to relabel an older build.
+
+The earlier `release_metadata.py` remains a local reviewed-image tool; it is not used to publish CI kernel/boot results. Automated development releases use a UT-series/daily-build tag, while version tags retain the port-version convention.
