@@ -28,3 +28,7 @@ The `Publish Ubuntu Touch build` workflow can also be run manually on main with 
 Vendor/OEM, userdata, automatic flashing and OTA are excluded. Independently reproducible vendor/OEM inputs, complete stock-baseline installation/restoration and exact-build hardware qualification still gate a complete installation release. Preserve licences and never upload personal backups or private logs.
 
 Actions artifacts expire after 30 days. Release assets are kept until explicitly removed; no automatic historical-release deletion is configured.
+
+## Source tag reservation
+
+The build workflow reserves its exact development source tag before compilation, in a separate contents-write job. Compilation remains read-only. This avoids GitHub's restriction on GITHUB_TOKEN creating refs/releases retroactively on commits with older workflow files. Failed builds may leave source tags, but create no public release. If main moves with incompatible workflow changes before reservation, reservation fails instead of attaching outputs to a different commit. Rebuild the current revision or have a maintainer reserve the exact old source tag before manual publication.
