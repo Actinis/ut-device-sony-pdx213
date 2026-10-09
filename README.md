@@ -27,4 +27,4 @@ or qualify a phone. Device results describe the tested prototype; source-import
 builds require their own installation/hardware qualification.
 
 Related: [port catalog](https://github.com/Actinis/ut-ports),
-[kernel source branch](https://github.com/Actinis/ut-kernel-sony-msm/tree/pdx213-halium11-noble).
+[kernel source branch](https://github.com/Actinis/ut-kernel-sony-msm/tree/main).

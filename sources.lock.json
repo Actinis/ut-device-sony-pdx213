@@ -7,8 +7,8 @@
     "kernel": {
       "kind": "git",
       "url": "https://github.com/Actinis/ut-kernel-sony-msm.git",
-      "commit": "2a14c4abce936866846c4e940d67e20667642aef",
-      "branch": "pdx213-halium11-noble",
+      "commit": "a7f1fc6538c2756cc2d7b08aeb0586dd4e7c2718",
+      "branch": "main",
       "submodules": {
         "drivers/staging/wlan-qc/fw-api": {
           "commit": "7b58b37877560bbb3916a1e73624c045b51ad21a",
