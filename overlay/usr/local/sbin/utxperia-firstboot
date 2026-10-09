@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+[ -f /var/lib/utxperia/firstboot-complete ] && exit 0
+systemd-tmpfiles --create /etc/tmpfiles.d/utxperia.conf
+ssh-keygen -A
+for name in Desktop Downloads Templates Public Documents Music Pictures Videos; do
+    install -d -o phablet -g phablet "/home/phablet/$name"
+done
+# The official UT rootfs supplies the initial wizard and default account.
+# Camera/apps need regenerated click policies for this device's integration.
+aa-clickhook -f
+install -d -m 755 /var/lib/utxperia
+touch /var/lib/utxperia/firstboot-complete

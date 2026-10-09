@@ -1,0 +1,101 @@
+#!/bin/sh
+# Sony pdx213: ordinary ext4 userdata and independent Android vendor image.
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+BB=/bin/busybox
+$BB mkdir -p /proc /sys /dev /run /config /utxperia-data /lower /root
+$BB mount -t proc proc /proc
+$BB mount -t sysfs sysfs /sys
+$BB mount -t devtmpfs devtmpfs /dev
+$BB mkdir -p /dev/pts
+$BB mount -t devpts devpts /dev/pts
+$BB mount -t tmpfs tmpfs /run
+$BB mkdir -p /sys/fs/pstore
+$BB mount -t pstore pstore /sys/fs/pstore
+exec >/dev/kmsg 2>&1
+echo UTXPERIA_UBUNTU_INIT_START
+# Configure the USB network before switching to key-authenticated Ubuntu SSH.
+$BB mount -t configfs configfs /config
+echo peripheral > /sys/bus/platform/devices/a600000.ssusb/mode
+G=/config/usb_gadget/utxperia
+$BB mkdir -p "$G/strings/0x409" "$G/functions/rndis.usb0" "$G/configs/c.1/strings/0x409"
+echo 0x18d1 > "$G/idVendor"
+echo 0xd001 > "$G/idProduct"
+echo utxperia-diagnostic > "$G/strings/0x409/serialnumber"
+echo Sony > "$G/strings/0x409/manufacturer"
+echo 'Xperia Ubuntu Touch port' > "$G/strings/0x409/product"
+$BB ln -s "$G/functions/rndis.usb0" "$G/configs/c.1/rndis.usb0"
+echo a600000.dwc3 > "$G/UDC"
+$BB ifconfig usb0 192.168.77.15 netmask 255.255.255.0 up
+fail() { echo "UTXPERIA_BOOT_FAILED:$*"; while :; do $BB sleep 60; done; }
+# Resolve GPT partition labels, never installation-specific device numbers or UUIDs.
+partition() {
+    for item in /sys/class/block/*/uevent; do
+        name=$($BB sed -n 's/^PARTNAME=//p' "$item")
+        if [ "$name" = "$1" ]; then
+            device=$($BB sed -n 's/^DEVNAME=//p' "$item")
+            echo "/dev/$device"; return 0
+        fi
+    done
+    return 1
+}
+for i in 1 2 3 4 5 6 7 8 9 10; do
+    DATA=$(partition userdata) && [ -b "$DATA" ] && break
+    $BB sleep 1
+done
+[ -b "$DATA" ] || fail userdata-partition
+$BB mount -t ext4 "$DATA" /utxperia-data || fail userdata-ext4
+[ "$($BB cat /utxperia-data/utxperia/layout-version)" = 1 ] || fail layout-marker
+# Fastboot ships a small sparse filesystem; grow it on the first boot.
+if [ ! -f /utxperia-data/utxperia/resize-complete ]; then
+    /usr/sbin/resize2fs "$DATA" || fail userdata-resize
+    $BB touch /utxperia-data/utxperia/resize-complete
+fi
+SLOT=a
+case " $($BB cat /proc/cmdline) " in *androidboot.slot_suffix=_b*) SLOT=b;; esac
+$BB cp /sys/fs/pstore/console-ramoops-0 /utxperia-data/utxperia/previous-kernel.log
+[ -f /utxperia-data/utxperia/rootfs-ut24.squashfs ] || fail root-image
+$BB mount -t squashfs -o loop,ro /utxperia-data/utxperia/rootfs-ut24.squashfs /lower || fail squashfs
+if [ ! -d /utxperia-data/utxperia/upper/home/phablet ]; then
+    $BB mkdir -p /utxperia-data/utxperia/upper/home
+    $BB cp -a /lower/home/phablet /utxperia-data/utxperia/upper/home/ || fail home-seed
+fi
+$BB mount -t overlay -o lowerdir=/lower,upperdir=/utxperia-data/utxperia/upper,workdir=/utxperia-data/utxperia/work overlay /root || fail root-overlay
+$BB chown 0:0 /root
+$BB mkdir -p /root/run /root/dev /root/proc /root/sys /root/utxperia-data /root/userdata
+$BB mount --bind /utxperia-data/utxperia/userdata /root/userdata || fail userdata-bind
+# Keep the existing Ubuntu home on its own mount. Overlayfs directory reads
+# otherwise expose backing paths to AppArmor instead of /home/phablet.
+if [ -d /utxperia-data/utxperia/upper/home/phablet ]; then
+    $BB mount --bind /utxperia-data/utxperia/upper/home/phablet /root/home/phablet || fail home-bind
+fi
+$BB cp /bin/utxperia-reboot-bootloader /root/usr/bin/utxperia-reboot-bootloader
+$BB mkdir -p /root/usr/local/lib/utxperia
+$BB cp /bin/busybox /root/usr/local/lib/utxperia/busybox
+# Mount the Android GSI read-only, with a RAM upper layer for init edits.
+$BB mkdir -p /run/android-lower /run/android-upper /run/android-work /root/android
+$BB mount -o loop,ro /utxperia-data/utxperia/android-rootfs.img /run/android-lower || fail android-image
+$BB mount -t overlay -o lowerdir=/run/android-lower,upperdir=/run/android-upper,workdir=/run/android-work overlay /root/android || fail android-overlay
+$BB mkdir -p /run/vendor-lower /run/utxperia-vendor-upper /run/utxperia-vendor-work
+$BB mount -t ext4 -o loop,ro /utxperia-data/utxperia/vendor.img /run/vendor-lower || fail vendor-image
+$BB mount -t overlay -o lowerdir=/run/vendor-lower,upperdir=/run/utxperia-vendor-upper,workdir=/run/utxperia-vendor-work overlay /root/android/vendor || fail vendor-overlay
+$BB mount -t ext4 -o ro "$(partition oem_a)" /root/android/odm || fail odm
+$BB mount -t vfat -o ro "$(partition modem_$SLOT)" /root/android/vendor/firmware_mnt || fail firmware
+$BB mount -t vfat -o ro "$(partition bluetooth_$SLOT)" /root/android/vendor/bt_firmware || fail bt-firmware
+$BB mount -t ext4 -o ro "$(partition dsp_$SLOT)" /root/android/vendor/dsp || fail dsp
+$BB mkdir -p /root/android/mnt/vendor/persist
+$BB mount -t ext4 -o ro "$(partition persist)" /root/android/mnt/vendor/persist || fail persist
+# Retain the USB gadget across switch_root.
+$BB mkdir -p /root/config
+$BB mount --move /config /root/config
+$BB mount --move /dev /root/dev
+$BB mount --move /proc /root/proc
+$BB mount --move /sys /root/sys
+$BB mount --move /run /root/run
+$BB mount --move /utxperia-data /root/utxperia-data || fail data-move
+# Keep coldplug independent of Android startup, as in the recovery image.
+# This also brings up SSH before Android's vendor services initialize.
+$BB mkdir -p /root/run/systemd/system
+$BB cp /root/usr/lib/systemd/system/systemd-udev-trigger-real.service /root/run/systemd/system/systemd-udev-trigger.service
+echo UTXPERIA_SYSTEMD_EXEC
+exec $BB switch_root /root /sbin/init systemd.unit=graphical.target
+fail switch-root
