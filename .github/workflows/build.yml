@@ -1,0 +1,25 @@
+name: Device build preparation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check build readiness
+        run: |
+          python3 ci/check_repository.py
+          python3 - <<'PYTHON'
+          import json
+          import sys
+          from pathlib import Path
+          lock = json.loads(Path('sources.lock.json').read_text())
+          if lock['status'] != 'locked':
+              sys.exit('Build unavailable: source dependencies have not been pinned yet.')
+          sys.exit('Build unavailable: source import and reproducible build entry point are still pending.')
+          PYTHON
