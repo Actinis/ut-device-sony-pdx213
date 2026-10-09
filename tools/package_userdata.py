@@ -29,6 +29,12 @@ def main():
     root=output/'rootfs';root.mkdir()
     run('tar','--same-owner','-xf',data/'downloads'/lock['rootfs']['filename'],'-C',root)
     run(sys.executable,ROOT/'tools/prepare_release_rootfs.py','--root',root,'--artifacts',build)
+    modules=build/'out/modules/lib/modules'
+    if modules.is_dir():
+        shutil.copytree(modules,root/'lib/modules',dirs_exist_ok=True,symlinks=True)
+        for directory,dirs,files in os.walk(root/'lib/modules'):
+            os.chown(directory,0,0)
+            for name in files:os.chown(Path(directory)/name,0,0,follow_symlinks=False)
     run(sys.executable,ROOT/'tools/test_release_locale.py',root)
     stage=output/'stage';ut=stage/'utxperia';ut.mkdir(parents=True)
     for n in ['upper','work','userdata']:(ut/n).mkdir()

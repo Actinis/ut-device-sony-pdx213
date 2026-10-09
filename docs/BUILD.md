@@ -1,7 +1,7 @@
 # Noble source build
 
 Use Linux x86_64 with GNU make, a C compiler, flex, bison, bc, OpenSSL/ELF
-headers, Python 3, tar, unzip, readelf and qemu-aarch64. For full local image
+headers, Python 3, tar, unzip, readelf, kmod and qemu-aarch64. For full local image
 assembly also install fakeroot, mksquashfs, mke2fs, img2simg and avbtool.
 
 ```sh
@@ -25,7 +25,7 @@ python3 tools/build.py \
 ```
 
 The build verifies the exact Git commits, tracked input hashes, Noble rootfs
-and initrd checksums. It compiles Image.gz-dtb, DTBO, the Linux syscall helper
+and initrd checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
 and Android compatibility library; stages ext4 tools from the locked rootfs;
 creates the release boot image; and executes its BusyBox shell under QEMU.
 `build-report.json` records inputs and output hashes. This is a real kernel/boot

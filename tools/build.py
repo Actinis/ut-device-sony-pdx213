@@ -54,7 +54,7 @@ def main():
     out=build/'out';out.mkdir(exist_ok=a.resume)
     toolbin=a.ndk.resolve()/'toolchains/llvm/prebuilt/linux-x86_64/bin'
     env=os.environ.copy();env['PATH']=str(toolbin)+os.pathsep+env['PATH'];env['TMPDIR']=str(build/'tmp');(build/'tmp').mkdir(exist_ok=a.resume)
-    env['KBUILD_BUILD_USER']='ut-ports';env['KBUILD_BUILD_HOST']='builder';env['KBUILD_BUILD_TIMESTAMP']='2026-10-09 00:00:00 UTC'
+    env['KBUILD_BUILD_VERSION']='1';env['KBUILD_BUILD_USER']='ut-ports';env['KBUILD_BUILD_HOST']='builder';env['KBUILD_BUILD_TIMESTAMP']='2026-10-09 00:00:00 UTC'
     kernel_out=build/'kernel';kernel_out.mkdir(exist_ok=a.resume)
     make=['make','-C',str(a.kernel_source.resolve()),'ARCH=arm64','O='+str(kernel_out),'LLVM=1','LLVM_IAS=1','CROSS_COMPILE=aarch64-linux-gnu-','CROSS_COMPILE_ARM32=arm-linux-gnueabi-']
     run(*make,'aosp_lena_pdx213_defconfig',env=env)
@@ -64,6 +64,7 @@ def main():
     shutil.copy2(kernel_out/'arch/arm64/boot/Image.gz-dtb',out/'Image.gz-dtb')
     payload=(kernel_out/'arch/arm64/boot/dts/somc/lagoon-lena-pdx213_generic-overlay.dtbo').read_bytes()
     (out/'dtbo.img').write_bytes(wrap(payload))
+    run(*make,'INSTALL_MOD_PATH='+str(out/'modules'),'INSTALL_MOD_STRIP=1','modules_install',env=env)
     clang=toolbin/'aarch64-linux-android30-clang'
     run(clang,'-nostdlib','-static','-Wl,-e,_start',ROOT/'device/reboot_bootloader.S','-o',out/'utxperia-reboot-bootloader')
     run(clang,'-shared','-fPIC','-O2',ROOT/'device/vndservicemanager-apparmor-compat.c','-o',out/'libvndservicemanager-apparmor-compat.so')
@@ -75,7 +76,7 @@ def main():
     run(sys.executable,ROOT/'tools/build_standalone_boot.py','--base',downloads/lock['initrd']['filename'],'--kernel',out/'Image.gz-dtb','--metadata',ROOT/'device/boot-metadata.json','--init',ROOT/'device/release-init','--extras',extras,'--mkbootimg',a.mkbootimg_source/'mkbootimg.py','--output',out/'boot.img')
     run(sys.executable,ROOT/'tools/test_standalone_boot.py',out/'boot.initrd.gz')
     run(sys.executable,ROOT/'tools/test_release_locale.py',ubuntu) if (ubuntu/'etc/locale.conf').read_text()=='LANG=en_US.UTF-8\n' else None
-    report={'scope':'kernel, DTBO, helper libraries and boot; no full userdata or hardware qualification','device_commit':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),'sources':lock,'artifacts':{f.name:sha(f) for f in out.iterdir() if f.is_file()}}
+    report={'scope':'kernel, DTBO, helper libraries and boot; no full userdata or hardware qualification','device_commit':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),'sources':lock,'artifacts':{str(f.relative_to(out)):sha(f) for f in out.rglob('*') if f.is_file() and not f.is_symlink()}}
     (out/'build-report.json').write_text(json.dumps(report,indent=2)+'\n')
     print('Built '+str(out))
 if __name__=='__main__':main()
