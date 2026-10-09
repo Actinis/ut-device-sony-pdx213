@@ -11,8 +11,8 @@ The prototype has an ext4 clean-install test with fastboot transfers limited to
 128 MiB, RAW rather than large FILL sparse chunks, a three-GiB seed filesystem
 and first-boot expansion to its actual userdata partition. Its measured storage
 capacity is not a requirement or a partition map for another phone. Installation
-is destructive to userdata; an existing legacy/LVM layout must not be assumed
-compatible with the ext4 payload. The source recipe needs no installed legacy.
+is destructive to userdata. Existing storage layouts must not be assumed
+compatible with the ext4 payload.
 
 The development fastboot sequence for this exact baseline writes owner-supplied
 Sony OEM to oem_a, clears userdata, writes userdata using `fastboot -S 128M`,

@@ -71,7 +71,7 @@ def main():
       'kernel_sha256':hashlib.sha256(a.kernel.read_bytes()).hexdigest(),
       'base_ramdisk_sha256':hashlib.sha256(a.base.read_bytes()).hexdigest(),
       'init_sha256':hashlib.sha256(a.init.read_bytes()).hexdigest(),'cmdline':cmdline,
-      'device_test':'pending','requires_installed_legacy':False}
+      'device_test':'pending'}
     a.output.with_suffix('.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
 if __name__=='__main__': main()

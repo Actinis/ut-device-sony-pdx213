@@ -28,9 +28,7 @@ no build-time backport or patch application is required.
 
 The vendor image is a mer-hybris/Jolla-built Android 11 AOSP adaptation. Its
 exact SHA256 is pinned, but an independent source rebuild and a publicly
-obtainable byte-equivalent artifact have not been established. No installed
-legacy filesystem or activation is needed by the runtime; this does not make
-the vendor input independently reproducible. The reviewed Android source
+obtainable byte-equivalent artifact have not been established. The vendor input is not yet independently reproducible. The reviewed Android source
 manifest and vendor notices are under `notices/`; do not infer that these alone
 complete the source or redistribution audit.
 
