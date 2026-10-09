@@ -135,9 +135,19 @@ def main():
         existing = subprocess.run(['gh', 'release', 'view', tag, '--repo', REPOSITORY, '--json', 'tagName'], capture_output=True)
         if existing.returncode == 0:
             raise ValueError('Release already exists; published assets are never overwritten')
+        # Create the exact ref first: Release API workflow-scope checks differ
+        # when asked to create a tag implicitly on a historical workflow commit.
+        tag_result = subprocess.run(['gh', 'api', f'repos/{REPOSITORY}/git/ref/tags/{tag}'], capture_output=True, text=True)
+        if tag_result.returncode != 0:
+            gh('api', '--method', 'POST', f'repos/{REPOSITORY}/git/refs', '-f', 'ref=refs/tags/' + tag, '-f', 'sha=' + run['head_sha'])
+        ref = api(f'repos/{REPOSITORY}/git/ref/tags/{tag}')['object']
+        while ref['type'] == 'tag':
+            ref = api(f"repos/{REPOSITORY}/git/tags/{ref['sha']}")['object']
+        if ref['type'] != 'commit' or ref['sha'] != run['head_sha']:
+            raise ValueError('Existing tag differs from built commit')
         # A partial upload remains a draft. Publish only after every asset was uploaded.
         body = root / 'notes.md'; body.write_text(notes)
-        gh('release', 'create', tag, '--repo', REPOSITORY, '--target', run['head_sha'], '--draft', '--prerelease', '--latest=false', '--title', title, '--notes-file', str(body), *[str(p) for p in sorted(output.iterdir())])
+        gh('release', 'create', tag, '--repo', REPOSITORY, '--verify-tag', '--draft', '--prerelease', '--latest=false', '--title', title, '--notes-file', str(body), *[str(p) for p in sorted(output.iterdir())])
         if not draft_only:
             gh('release', 'edit', tag, '--repo', REPOSITORY, '--draft=false', '--prerelease', '--latest=false')
         print(f"{'Draft' if draft_only else 'Prerelease'}: https://github.com/{REPOSITORY}/releases/tag/{tag}")
