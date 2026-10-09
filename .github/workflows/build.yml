@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: [pdx213-noble-port-v*]
     paths: [device/**, overlay/**, tools/**, sources.lock.json, .github/workflows/build.yml]
 permissions:
   contents: read
