@@ -19,7 +19,7 @@ Pushing `pdx213-noble-port-v0.1.0` (example) triggers the kernel/boot build and 
 
 Releases include separately named boot and DTBO images, a kernel/boot tar archive with modules and helpers, build-report, input identity, exact source lock, release-manifest and SHA256SUMS. Download all assets to one directory and run `sha256sum -c SHA256SUMS`. The manifest records OS series, exact rootfs version, source commits, build ID, source workflow URL, port version (null for development snapshots) and pending qualification.
 
-The publisher accepts only successful push/manual runs of the expected build workflow in this repository, on main or explicit version tags. It verifies the downloaded inventory, hashes, modes, required modules and metadata against the source lock retrieved at the exact built commit. Compilation has read-only permissions; the separate publisher alone has contents-write permission. No PAT or private build inputs are needed.
+The publisher accepts only successful push/manual runs of the expected build workflow in this repository, on main or explicit version tags. It verifies the downloaded inventory, hashes, modes, required modules and metadata against the source lock retrieved at the exact built commit. Compilation has read-only permissions; only the separate source-tag reservation and publication jobs have contents-write permission. No PAT or private build inputs are needed.
 
 The `Publish Ubuntu Touch build` workflow can also be run manually on main with a successful build run ID. It publishes that run's outputs without rebuilding or relabeling them as a different source revision.
 
