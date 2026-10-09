@@ -35,3 +35,5 @@ NFC build inputs, supported operations and explicit qualification gaps:
 [NFC](device/nfc/README.md).
 
 Double-tap wake control and qualification: [touch wake](docs/TOUCH.md).
+
+Experimental lift wake integration and qualification: [Raise to wake](device/repowerd/README.md).

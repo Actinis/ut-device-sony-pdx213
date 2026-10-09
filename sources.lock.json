@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "device": "sony-pdx213",
   "ubuntu_touch": "24.04",
   "status": "locked",
@@ -590,6 +590,22 @@
         "device/nfc/nfcd.patch": "0937cfc43c6e012c99ce5d9669263d58bfca47598f46534470de7668ccc055d9",
         "device/nfc/runtime/27-utxperia-nfc": "fc4ea04656533999ec12830be5a207c3e1c134cad83643e94bdfbb4de8cfc402",
         "device/nfc/runtime/utxperia-nfc.conf": "a23b612c632861eedb8fbe321e61e9be950a6d5570eb8dd9a60cf400ff7e88a4"
+      }
+    },
+    "repowerd": {
+      "kind": "derived",
+      "dependencies": [
+        "toolchain",
+        "rootfs"
+      ],
+      "description": "Pinned UBports Repowerd with wake-only tilt activity; independent ARM64 sysroot from locked packages and Noble runtime",
+      "files": {
+        "device/repowerd/COPYING": "4631da83311d27f99078d0d102e31bd34a4fcbcc2dae2aa40f1454a5b48125dc",
+        "device/repowerd/README.md": "e5eb2bf552e50a2178a0b55cd89862e69ae2c807eb186d5d492cb0b019dce2f8",
+        "device/repowerd/UPSTREAM-COPYRIGHT": "c7ae52130a736c1ea896b45c804b586f8f3f43c16ad52c4e8798354f68896283",
+        "device/repowerd/core-tests.cmake": "4a2310ec8a0866ab19f38dd84922d75f2d7e3ec9f1aab93ad22310c9373c9fb0",
+        "device/repowerd/inputs.json": "cf9fe051c5eacd3ad609b45395360cf105190e6652d7da54e4e93ecf7c83b056",
+        "device/repowerd/raise-to-wake.patch": "3878b86b43e524bb67fd4f0fd79f7ef1f7e51d1e9092711ac78e35d3ed50f6c8"
       }
     }
   },

@@ -11,8 +11,8 @@ def validate(data, repository=None):
     need(data.get('status') == 'locked', 'Sources are not locked')
     sources=data.get('sources',{})
     schema=data.get('schema_version')
-    need(schema in (1,2,3,4),'Unknown lock schema')
-    need(set(sources) == (REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
+    need(schema in (1,2,3,4,5),'Unknown lock schema')
+    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
     for name, entry in sources.items():
         kind=entry.get('kind') if schema>=2 else 'git' if name=='kernel' else 'artifact'
         need(kind in ('git','artifact','manual','derived'),'Unknown source kind')
@@ -52,7 +52,7 @@ def validate(data, repository=None):
                 need(all(provenance[name].get(key)==value for key,value in origin.items()),'GNSS provenance mismatch: '+name)
             tracked={path.relative_to(repository).as_posix() for path in (Path(repository)/'device/gnss').rglob('*') if path.is_file()}
             need(tracked<=set(gnss['files']),'Unpinned GNSS source/header')
-    if schema==4:
+    if schema>=4:
         nfc=sources['nfc']
         need(nfc.get('kind')=='derived' and set(nfc.get('dependencies',[]))=={'gnss','toolchain','rootfs','halium_gsi'},'Incomplete NFC dependencies')
         need(bool(nfc.get('files')),'NFC input hashes required')
@@ -66,6 +66,16 @@ def validate(data, repository=None):
             for name in ('interfaces','vndk_headers','generator'):
                 origin=origins.get(name,{})
                 need(str(origin.get('url','')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}',origin.get('commit',''))),'Invalid NFC header provenance')
+    if schema>=5:
+        entry=sources['repowerd']
+        need(entry.get('kind')=='derived' and set(entry.get('dependencies',[]))=={'toolchain','rootfs'},'Incomplete Repowerd dependencies')
+        need(bool(entry.get('files')),'Repowerd input hashes required')
+        if repository:
+            import json
+            base=Path(repository)/'device/repowerd'
+            tracked={p.relative_to(repository).as_posix() for p in base.rglob('*') if p.is_file()}
+            need(tracked==set(entry['files']),'Unpinned or stale Repowerd source inventory')
+            validate_repowerd_inputs(json.loads((base/'inputs.json').read_text()),base)
     return data
 
 
@@ -93,4 +103,24 @@ def validate_nfc_inputs(data, root=None):
         need(bool(re.fullmatch('[0-9a-f]{64}',e.get('sha256',''))),'Unpinned NFC package')
         name=e.get('filename','')
         need(bool(name) and Path(name).name==name and name not in ('.','..') and e['url'].endswith('/'+name),'Unsafe NFC package filename')
+    return data
+
+
+def validate_repowerd_inputs(data, root=None):
+    def need(condition, message):
+        if not condition: raise ValueError(message)
+    need(data.get('schema_version')==1,'Unknown Repowerd input schema')
+    source=data.get('source',{})
+    need(str(source.get('url','')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}',source.get('commit',''))) and source.get('commit')!='0'*40,'Unpinned Repowerd source')
+    need(source.get('patch')=='raise-to-wake.patch' and bool(re.fullmatch('[0-9a-f]{64}',source.get('patch_sha256',''))),'Unpinned Repowerd patch')
+    if root: need(hashlib.sha256((Path(root)/source['patch']).read_bytes()).hexdigest()==source['patch_sha256'],'Repowerd patch hash mismatch')
+    packages=data.get('development_packages',[])
+    expected={'libc6-dev','linux-libc-dev','libglib2.0-dev','libgbinder-dev','libglibutil-dev','android-headers','libdeviceinfo-dev','libhybris-common-dev','libhybris-dev','libandroid-properties-dev','libgcc-13-dev','libstdc++-13-dev','libffi-dev','libpcre2-dev','zlib1g-dev','libblkid-dev','libmount-dev','libselinux1-dev','libsepol-dev','uuid-dev'}
+    names=[e.get('name') for e in packages]
+    need(len(names)==len(expected) and set(names)==expected,'Incomplete Repowerd development package inventory')
+    for entry in packages:
+        name=entry.get('filename','')
+        need(bool(entry.get('version')) and str(entry.get('url','')).startswith('https://'),'Missing Repowerd package provenance')
+        need(bool(re.fullmatch('[0-9a-f]{64}',entry.get('sha256',''))),'Unpinned Repowerd package')
+        need(bool(name) and Path(name).name==name and name not in ('.','..') and entry['url'].endswith('/'+name),'Unsafe Repowerd package filename')
     return data

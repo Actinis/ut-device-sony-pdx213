@@ -1,6 +1,6 @@
 # Locked inputs and build scope
 
-Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 4 is
+Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 5 is
 validated by `tools/sources_lock.py`, CI, the build and release metadata tool.
 `locked` means that the listed input identities are pinned, not that all inputs
 are downloadable or a complete installation has been reproduced.
@@ -71,3 +71,13 @@ Generated HIDL sources and supplemental public headers are tracked inputs with
 provenance in `ORIGINS.json`; normal builds do not regenerate them. Android
 linker inputs come from the locked GSI; Linux runtime libraries come from the
 locked Noble rootfs. No personal phone library is a build input.
+
+## Repowerd inputs
+
+The schema-5 `repowerd` derived input hashes every file under
+`device/repowerd/` and depends on the locked toolchain and Noble rootfs.
+Its `inputs.json` pins the UBports Git base, local GPL-3.0 patch and complete
+ARM64 development-package inventory. Validation rejects missing, duplicate,
+unsafe or unhashed inputs. The independent sysroot is rebuilt from these
+packages and locked rootfs libraries; no NFC work directory is reused.
+See [Raise to wake](../device/repowerd/README.md) for runtime integration and gaps.

@@ -1,0 +1,16 @@
+[Unit]
+Description=Xperia tilt recognition registry overlay
+DefaultDependencies=no
+Requires=mount-android-partitions.service
+After=mount-android-partitions.service
+Before=lxc-android-config.service
+ConditionPathExists=/android/mnt/vendor/persist/sensors/registry/registry/sns_tilt
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/utxperia-tilt
+ExecStop=/bin/umount /android/mnt/vendor/persist/sensors/registry/registry/sns_tilt
+
+[Install]
+WantedBy=lxc-android-config.service

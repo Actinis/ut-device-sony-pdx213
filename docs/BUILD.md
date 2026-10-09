@@ -27,7 +27,7 @@ python3 tools/build.py \
 
 The build verifies the exact Git commits, tracked input hashes, Noble rootfs
 initrd and GSI checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
-Android compatibility library, GNSS libraries and the pinned NFC stack; stages ext4 tools from the locked rootfs;
+Android compatibility library, GNSS libraries, the pinned NFC stack and adapted Repowerd; stages ext4 tools from the locked rootfs;
 creates the release boot image; and executes its BusyBox shell under QEMU.
 `input-identity.json` and the schema-2 `build-report.json` bind the build ID,
 clean device commit, exact lock checksum and complete dependency identity.
@@ -39,7 +39,7 @@ build, not full userdata assembly or hardware qualification. AppArmor and PMF
 fixes are in-tree; do not run an apply-backport script.
 
 CI retains kernel/boot build results for 30 days as a GitHub Actions artifact,
-including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS/NFC libraries, build-report and input
+including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS/NFC libraries and Repowerd, build-report and input
 identity. The tar archive preserves executable modes. These are experimental
 build outputs, not an installation release; vendor/OEM and userdata are excluded.
 
@@ -56,7 +56,7 @@ fakeroot python3 tools/package_userdata.py --build-id clean-noble-001 \
 
 Before creating any packaging output, the command requires a completed schema-2
 report for the current clean checkout, lock and selected build ID. It verifies
-the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers/GNSS/NFC libraries
+the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers/GNSS/NFC libraries and Repowerd
 and kernel modules. Missing results, extra files, changed helpers, mixed module
 releases, linked output directories and older report formats are rejected.
 Build directories are not interchangeable, even when their filenames match.
@@ -84,3 +84,10 @@ full kernel/boot/GNSS/NFC build, 22 ARM64 Classic tests and userdata/vbmeta
 assembly passed. Packaged NFC hashes, plugin links and service enablement were
 checked. NFC runtime/read/off-on checks passed on XQ-BT52; the assembled images
 have not been flashed. See the NFC qualification table for untested functions.
+
+Raise-to-wake integration builds the pinned Repowerd source in a separate
+`repowerd/` work directory, runs host core tests and installs its ARM64 binary
+through the clean-rootfs packager. `out/repowerd/repowerd` and its input/output
+report are mandatory; the CI archive also retains its core-test log. Host builds
+require CMake, pkg-config, GoogleTest and GoogleMock in addition to the existing
+dependencies. The full CI installs these dependencies explicitly.

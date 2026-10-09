@@ -1,0 +1,361 @@
+diff --git a/src/adapters/lsc_user_activity.cpp b/src/adapters/lsc_user_activity.cpp
+index 2d408d6..047d222 100644
+--- a/src/adapters/lsc_user_activity.cpp
++++ b/src/adapters/lsc_user_activity.cpp
+@@ -17,8 +17,48 @@
+  */
+ 
+ #include "lsc_user_activity.h"
++#include "sensorfw/sensorfw_common.h"
++#include "sensorfw/socketreader.h"
++#include <cstdlib>
++#include <ctime>
++#include <stdexcept>
+ #include "event_loop_handler_registration.h"
+ 
++namespace repowerd {
++class SensorfwWakeupActivity : public Sensorfw
++{
++public:
++    SensorfwWakeupActivity(std::shared_ptr<Log> const& log,
++                          std::string const& address, std::function<void()> handler)
++        : Sensorfw(log, address, "RaiseToWake", PluginType::WAKEUP), handler{handler} {}
++    ~SensorfwWakeupActivity()
++    {
++        dbus_event_loop.enqueue([this]{ stop(); }).get();
++    }
++    void enable() { dbus_event_loop.enqueue([this]{ start(); }).get(); }
++private:
++    void data_recived_impl() override
++    {
++        std::vector<TimedUnsigned> values;
++        if (!m_socket->read<TimedUnsigned>(values)) return;
++        timespec now{};
++        if (clock_gettime(CLOCK_BOOTTIME, &now)) return;
++        auto const now_us = uint64_t(now.tv_sec) * 1000000 + now.tv_nsec / 1000;
++        for (auto const& value : values)
++        {
++            auto const ts = value.timestamp_;
++            if (!value.value_ || ts <= last_timestamp || ts > now_us || now_us - ts > 2000000) continue;
++            last_timestamp = ts;
++            if (now_us - last_delivery < 500000) continue;
++            last_delivery = now_us;
++            handler();
++        }
++    }
++    std::function<void()> handler;
++    uint64_t last_timestamp{0}, last_delivery{0};
++};
++}
++
+ namespace
+ {
+ auto const null_handler = [](repowerd::UserActivityType){};
+@@ -37,15 +77,33 @@ repowerd::UserActivityType user_activity_type_from_dbus_value(int32_t value)
+ }
+ 
+ repowerd::LscUserActivity::LscUserActivity(
+-    std::string const& dbus_bus_address)
++    std::string const& dbus_bus_address, std::shared_ptr<Log> const& log)
+     : dbus_connection{dbus_bus_address},
+       dbus_event_loop{"UserActivity"},
+       user_activity_handler{null_handler}
+ {
++    auto const enabled = std::getenv("REPOWERD_RAISE_TO_WAKE");
++    if (log && enabled && std::string(enabled) == "1")
++    {
++        try {
++            wake_activity = std::make_unique<SensorfwWakeupActivity>(log, dbus_bus_address,
++                [this]{ dbus_event_loop.enqueue([this]{ user_activity_handler(UserActivityType::wake_gesture); }); });
++        } catch (std::exception const& e) {
++            log->logWarning("RaiseToWake", "Unavailable: %s", e.what());
++        }
++    }
++
++}
++
++repowerd::LscUserActivity::~LscUserActivity()
++{
++    wake_activity.reset();
++    dbus_event_loop.enqueue([]{}).get();
+ }
+ 
+ void repowerd::LscUserActivity::start_processing()
+ {
++    if (wake_activity) wake_activity->enable();
+     dbus_signal_handler_registration = dbus_event_loop.register_signal_handler(
+         dbus_connection,
+         dbus_user_activity_name,
+diff --git a/src/adapters/lsc_user_activity.h b/src/adapters/lsc_user_activity.h
+index 0846074..ca56be1 100644
+--- a/src/adapters/lsc_user_activity.h
++++ b/src/adapters/lsc_user_activity.h
+@@ -22,14 +22,19 @@
+ 
+ #include "dbus_connection_handle.h"
+ #include "dbus_event_loop.h"
++#include "src/core/log.h"
+ 
+ namespace repowerd
+ {
+ 
++class SensorfwWakeupActivity;
++
+ class LscUserActivity : public UserActivity
+ {
+ public:
+-    LscUserActivity(std::string const& dbus_bus_address);
++    LscUserActivity(std::string const& dbus_bus_address,
++                    std::shared_ptr<Log> const& log = nullptr);
++    ~LscUserActivity();
+ 
+     void start_processing() override;
+     HandlerRegistration register_user_activity_handler(
+@@ -49,6 +54,7 @@ private:
+     HandlerRegistration dbus_signal_handler_registration;
+ 
+     UserActivityHandler user_activity_handler;
++    std::unique_ptr<SensorfwWakeupActivity> wake_activity;
+ };
+ 
+ }
+diff --git a/src/adapters/sensorfw/sensorfw_common.cpp b/src/adapters/sensorfw/sensorfw_common.cpp
+index 86d5ca2..00c74d0 100644
+--- a/src/adapters/sensorfw/sensorfw_common.cpp
++++ b/src/adapters/sensorfw/sensorfw_common.cpp
+@@ -78,6 +78,7 @@ const char* repowerd::Sensorfw::plugin_string() const
+     switch (m_plugin) {
+         case PluginType::LIGHT: return "alssensor";
+         case PluginType::PROXIMITY: return "proximitysensor";
++        case PluginType::WAKEUP: return "wakeupsensor";
+     }
+ 
+     return "";
+@@ -88,6 +89,7 @@ const char* repowerd::Sensorfw::plugin_interface() const
+     switch (m_plugin) {
+         case PluginType::LIGHT: return "local.ALSSensor";
+         case PluginType::PROXIMITY: return "local.ProximitySensor";
++        case PluginType::WAKEUP: return "local.WakeupSensor";
+     }
+ 
+     return "";
+diff --git a/src/adapters/sensorfw/sensorfw_common.h b/src/adapters/sensorfw/sensorfw_common.h
+index 704994c..e5167d8 100644
+--- a/src/adapters/sensorfw/sensorfw_common.h
++++ b/src/adapters/sensorfw/sensorfw_common.h
+@@ -33,7 +33,8 @@ class Sensorfw {
+ public:
+     enum PluginType {
+         LIGHT,
+-        PROXIMITY
++        PROXIMITY,
++        WAKEUP
+     };
+ 
+     Sensorfw(
+diff --git a/src/core/daemon.cpp b/src/core/daemon.cpp
+index 48847e2..8194d96 100644
+--- a/src/core/daemon.cpp
++++ b/src/core/daemon.cpp
+@@ -134,6 +134,11 @@ repowerd::Daemon::register_event_handlers()
+                     enqueue_action_to_active_session(
+                         [this] (Session* s) { s->state_machine->handle_user_activity_changing_power_state(); });
+                 }
++                else if (type == UserActivityType::wake_gesture)
++                {
++                    enqueue_action_to_active_session(
++                        [this] (Session* s) { s->state_machine->handle_wake_gesture(); });
++                }
+                 else if (type == UserActivityType::extend_power_state)
+                 {
+                     enqueue_action_to_active_session(
+diff --git a/src/core/default_state_machine.cpp b/src/core/default_state_machine.cpp
+index e5b3598..0fd90b5 100644
+--- a/src/core/default_state_machine.cpp
++++ b/src/core/default_state_machine.cpp
+@@ -203,6 +203,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
+ 
+ void repowerd::DefaultStateMachine::handle_active_call()
+ {
++    raise_call_active = true;
+     log->logDebug(log_tag, "handle_active_call");
+ 
+     if (display_power_mode == DisplayPowerMode::on)
+@@ -220,6 +221,7 @@ void repowerd::DefaultStateMachine::handle_active_call()
+ 
+ void repowerd::DefaultStateMachine::handle_no_active_call()
+ {
++    raise_call_active = false;
+     log->logDebug(log_tag, "handle_no_active_call");
+ 
+     if (display_power_mode == DisplayPowerMode::on)
+@@ -540,6 +542,15 @@ void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
+     }
+ }
+ 
++void repowerd::DefaultStateMachine::handle_wake_gesture()
++{
++    if (display_power_mode == DisplayPowerMode::off && !raise_call_active &&
++        proximity_sensor->proximity_state() == ProximityState::far)
++    {
++        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::activity);
++    }
++}
++
+ void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
+ {
+     log->logDebug(log_tag, "handle_user_activity_extending_power_state");
+diff --git a/src/core/default_state_machine.h b/src/core/default_state_machine.h
+index 47c6679..948db58 100644
+--- a/src/core/default_state_machine.h
++++ b/src/core/default_state_machine.h
+@@ -67,6 +67,7 @@ public:
+ 
+     void handle_user_activity_changing_power_state() override;
+     void handle_user_activity_extending_power_state() override;
++    void handle_wake_gesture() override;
+ 
+     void handle_set_normal_brightness_value(double value) override;
+     void handle_enable_autobrightness() override;
+@@ -162,6 +163,7 @@ private:
+ 
+     std::array<bool,InactivityTimeoutAllowance::count> inactivity_timeout_allowances;
+     std::array<bool,ProximityEnablement::count> proximity_enablements;
++    bool raise_call_active{false};
+     DisplayPowerMode display_power_mode;
+     DisplayPowerMode display_power_mode_at_power_button_press;
+     DisplayPowerChangeReason display_power_mode_reason;
+diff --git a/src/core/null_state_machine.h b/src/core/null_state_machine.h
+index 88231a4..337d1f5 100644
+--- a/src/core/null_state_machine.h
++++ b/src/core/null_state_machine.h
+@@ -57,6 +57,7 @@ public:
+ 
+     void handle_user_activity_changing_power_state() override {}
+     void handle_user_activity_extending_power_state() override {}
++    void handle_wake_gesture() override {}
+ 
+     void handle_set_normal_brightness_value(double) override {}
+     void handle_enable_autobrightness() override {}
+diff --git a/src/core/state_machine.h b/src/core/state_machine.h
+index 450c705..3a9c237 100644
+--- a/src/core/state_machine.h
++++ b/src/core/state_machine.h
+@@ -67,6 +67,7 @@ public:
+ 
+     virtual void handle_user_activity_changing_power_state() = 0;
+     virtual void handle_user_activity_extending_power_state() = 0;
++    virtual void handle_wake_gesture() = 0;
+ 
+     virtual void handle_set_normal_brightness_value(double) = 0;
+     virtual void handle_enable_autobrightness() = 0;
+diff --git a/src/core/user_activity.h b/src/core/user_activity.h
+index afe7f55..5d8f7cc 100644
+--- a/src/core/user_activity.h
++++ b/src/core/user_activity.h
+@@ -25,7 +25,7 @@
+ namespace repowerd
+ {
+ 
+-enum class UserActivityType{change_power_state, extend_power_state};
++enum class UserActivityType{change_power_state, extend_power_state, wake_gesture};
+ using UserActivityHandler = std::function<void(UserActivityType)>;
+ 
+ class UserActivity
+diff --git a/src/default_daemon_config.cpp b/src/default_daemon_config.cpp
+index 20c2d3f..4a4c8cd 100644
+--- a/src/default_daemon_config.cpp
++++ b/src/default_daemon_config.cpp
+@@ -404,7 +404,7 @@ std::shared_ptr<repowerd::UserActivity>
+ repowerd::DefaultDaemonConfig::the_user_activity()
+ {
+     if (!user_activity)
+-        user_activity = std::make_shared<LscUserActivity>(the_dbus_bus_address());
++        user_activity = std::make_shared<LscUserActivity>(the_dbus_bus_address(), the_log());
+     return user_activity;
+ }
+ 
+diff --git a/tests/core-tests/acceptance_test.cpp b/tests/core-tests/acceptance_test.cpp
+index e197b37..c506f42 100644
+--- a/tests/core-tests/acceptance_test.cpp
++++ b/tests/core-tests/acceptance_test.cpp
+@@ -514,3 +514,9 @@ bool rt::AcceptanceTestBase::are_default_system_handlers_allowed()
+ {
+     return config.the_fake_system_power_control()->are_default_system_handlers_allowed();
+ }
++
++void rt::AcceptanceTestBase::perform_wake_gesture()
++{
++    config.the_fake_user_activity()->perform(repowerd::UserActivityType::wake_gesture);
++    daemon.flush();
++}
+diff --git a/tests/core-tests/acceptance_test.h b/tests/core-tests/acceptance_test.h
+index d14bfda..4d91986 100644
+--- a/tests/core-tests/acceptance_test.h
++++ b/tests/core-tests/acceptance_test.h
+@@ -109,6 +109,7 @@ struct AcceptanceTestBase
+     void open_lid();
+     void perform_user_activity_extending_power_state();
+     void perform_user_activity_changing_power_state();
++    void perform_wake_gesture();
+     void press_power_button();
+     void release_power_button();
+     void set_proximity_state_far();
+diff --git a/tests/core-tests/test_daemon.cpp b/tests/core-tests/test_daemon.cpp
+index 545ca1d..665a3ea 100644
+--- a/tests/core-tests/test_daemon.cpp
++++ b/tests/core-tests/test_daemon.cpp
+@@ -90,6 +90,7 @@ struct MockStateMachine : public repowerd::StateMachine
+                       std::chrono::milliseconds timeout));
+ 
+     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
++    MOCK_METHOD0(handle_wake_gesture, void());
+     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
+ 
+     MOCK_METHOD1(handle_set_normal_brightness_value, void(double));
+diff --git a/tests/core-tests/test_user_activity.cpp b/tests/core-tests/test_user_activity.cpp
+index f7324cb..6f138c6 100644
+--- a/tests/core-tests/test_user_activity.cpp
++++ b/tests/core-tests/test_user_activity.cpp
+@@ -225,3 +225,41 @@ TEST_F(AUserActivity, not_performed_turning_off_display_is_logged)
+ 
+     EXPECT_TRUE(log_contains_line({"display_off"}));
+ }
++
++TEST_F(AUserActivity, wake_gesture_turns_on_off_display)
++{
++    expect_display_turns_on();
++    perform_wake_gesture();
++}
++
++TEST_F(AUserActivity, wake_gesture_does_not_toggle_on_display)
++{
++    turn_on_display();
++    expect_no_display_power_change();
++    expect_no_display_brightness_change();
++    perform_wake_gesture();
++}
++
++TEST_F(AUserActivity, wake_gesture_does_not_extend_on_display_timeout)
++{
++    turn_on_display();
++    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
++    perform_wake_gesture();
++    expect_display_turns_off();
++    advance_time_by(1ms);
++}
++
++TEST_F(AUserActivity, wake_gesture_does_not_wake_with_proximity_near)
++{
++    set_proximity_state_near();
++    expect_no_display_power_change();
++    perform_wake_gesture();
++}
++
++TEST_F(AUserActivity, wake_gesture_does_not_wake_during_call)
++{
++    emit_active_call();
++    turn_off_display();
++    expect_no_display_power_change();
++    perform_wake_gesture();
++}

@@ -23,6 +23,9 @@ def main():
         dest=root/'usr/local/lib/utxperia/gnss'/name
         dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(a.artifacts/'out/gnss'/name,dest);os.chown(dest,0,0)
+    dest=root/'usr/local/libexec/utxperia-repowerd'
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(a.artifacts/'out/repowerd/repowerd',dest);os.chown(dest,0,0);dest.chmod(0o755)
     from build_nfc import ARTIFACTS
     nfc=root/'usr/local/lib/utxperia/nfc'
     nfc.mkdir(parents=True,exist_ok=True)
@@ -44,7 +47,7 @@ def main():
             fields[3]=','.join(dict.fromkeys(members+additions[fields[0]]))
         lines.append(':'.join(fields))
     file.write_text('\n'.join(lines)+'\n')
-    for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-internet.service','utxperia-usb-mtp.timer','utxperia-firstboot.service']:
+    for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-internet.service','utxperia-usb-mtp.timer','utxperia-firstboot.service','utxperia-tilt.service']:
         subprocess.run(['systemctl','--root',str(root),'enable',name],check=True)
     subprocess.run(['systemctl','--root',str(root),'disable','ssh.service','ssh.socket','utxperia-usb-mtp.service'],check=True)
     # The port owns its configfs gadget; stock usb-moded must not compete.
