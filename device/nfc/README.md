@@ -71,7 +71,8 @@ notices are retained. No linker library is obtained from a connected phone.
 `tools/build_nfc.py` uses the explicitly supplied NDK r23b, locked GSI and Noble
 rootfs, separate work/output directories, and downloads cache. Portable Python
 `gdbus-codegen` comes from the pinned Noble package. Every upstream checkout is
-fresh and patches are checked before application. The report binds input and
+fresh and patches are checked before application. The build checks all four
+builtin daemon plugin descriptors separately from the external binder descriptor. The report binds input and
 lock hashes, runtime linker-input identities and all six output hashes. Missing,
 linked or changed outputs and mismatched resume inputs are rejected.
 

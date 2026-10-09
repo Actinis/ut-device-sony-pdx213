@@ -63,7 +63,7 @@ def build(ndk,image,ubuntu,debugfs,work,out,downloads,source_cache=None):
  if '23.1.7779620' not in (ndk/'source.properties').read_text():raise ValueError('Locked NDK r23b required')
  linuxcc=toolbin/'clang';androidcc=toolbin/'aarch64-linux-android30-clang++'
  inc=sysroot/'usr/include';runtime=ubuntu/'usr/lib/aarch64-linux-gnu'
- cflags=['--target=aarch64-linux-gnu','--sysroot='+str(sysroot),'-mno-outline-atomics','-fPIC','-O2','-DDEBUG','-DNFC_PLUGIN_EXTERNAL','-DDISABLE_HEXDUMP','-Werror=implicit-function-declaration']
+ cflags=['--target=aarch64-linux-gnu','--sysroot='+str(sysroot),'-mno-outline-atomics','-fPIC','-O2','-DDEBUG','-DDISABLE_HEXDUMP','-Werror=implicit-function-declaration']
  includes=[repos['nfcd']/'core/include',repos['nci-plugin']/'include',repos['ncicore']/'include',inc,inc/'aarch64-linux-gnu',inc/'glib-2.0',sysroot/'usr/lib/aarch64-linux-gnu/glib-2.0/include',inc/'gbinder',inc/'gutil',inc/'nfcd',inc/'nciplugin',inc/'ncicore',inc/'nfcdef',inc/'gio-unix-2.0']
  cflags += [arg for p in includes for arg in ('-I',str(p))]
  def shared(name,files,libs,extra=()):
@@ -87,6 +87,13 @@ def build(ndk,image,ubuntu,debugfs,work,out,downloads,source_cache=None):
  options=['CC='+cc,'LD='+ld,'AR='+str(toolbin/'llvm-ar'),'HAVE_DBUSACCESS=0','KEEP_SYMBOLS=1','CFLAGS='+' '.join(cflags),'LDFLAGS=-L'+str(link)+' -Wl,-rpath-link,'+str(runtime),'LIBDIR=/usr/lib','LIBS='+' '.join(str(p) for p in link.glob('*.so'))+' '+str(runtime/'ld-linux-aarch64.so.1')+' '+str(startup/'crtn.o')]
  run('make','-j4','-C',repos['nfcd']/'src','debug',*options,env=env)
  shutil.copy2(repos['nfcd']/'src/build/debug/nfcd',out/'nfcd')
+ symbols=subprocess.check_output([str(toolbin/'llvm-nm'),'--defined-only',str(out/'nfcd')],text=True)
+ for name in ('dbus_handlers','dbus_neard','dbus_service','settings'):
+  if not any(line.split()[-1]=='_nfc_plugin_'+name for line in symbols.splitlines()):
+   raise ValueError('Missing builtin NFC plugin: '+name)
+ symbols=subprocess.check_output([str(toolbin/'llvm-nm'),'--defined-only',str(out/'binder.so')],text=True)
+ if not any(line.split()[-1]=='nfc_plugin_desc' for line in symbols.splitlines()):raise ValueError('Missing external binder plugin descriptor')
+
  # Execute the shipped synthetic Classic regression suite using locked ARM64
  # libraries. Its executable/log stay in work, outside installation artifacts.
  testobj=work/'classic-test-obj';testobj.mkdir();objects=[]

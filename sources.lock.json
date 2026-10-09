@@ -468,7 +468,7 @@
       "description": "Build six NFC binaries from pinned public sources and development packages, tracked HIDL/VNDK inputs, GSI Android libraries and Noble runtime libraries; see device/nfc/README.md.",
       "files": {
         "device/nfc/ORIGINS.json": "6f2968615816ca64e966b16a861f3f1e96bb0be8bc9f2341c8703d591d01aba3",
-        "device/nfc/README.md": "cd4d37092fbec2172932227037e054ec196b7590526dd81cec6682ea1af96c11",
+        "device/nfc/README.md": "13807d56bb23bbe8e3c3541c4bcfc5588310f7f74d8afbbbc332988be8789b29",
         "device/nfc/binder-plugin.patch": "e01ab371dcd164d9e454ff73b9169f03e61019ac9a2848862d93313d7675d339",
         "device/nfc/hal.patch": "2a9f05d688d68200390b33763c4b6ea5e8b029187f37376e078fda26818353d6",
         "device/nfc/hidl/vendor/nxp/nxpese/1.0/NxpEseAll.cpp": "83bca4bdb8f18781967f70b871361eb81196969758be2120a162fbf0f51d4a24",
