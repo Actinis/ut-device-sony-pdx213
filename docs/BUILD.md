@@ -28,7 +28,12 @@ The build verifies the exact Git commits, tracked input hashes, Noble rootfs
 and initrd checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
 and Android compatibility library; stages ext4 tools from the locked rootfs;
 creates the release boot image; and executes its BusyBox shell under QEMU.
-`build-report.json` records inputs and output hashes. This is a real kernel/boot
+`input-identity.json` and the schema-2 `build-report.json` bind the build ID,
+clean device commit, exact lock checksum and complete dependency identity.
+The report also records the kernel release, output hashes and file modes;
+it excludes itself from the artifact inventory. Installed development links
+back to kernel source/build directories are omitted. `--resume` accepts only
+this same identity and invalidates the completed report before rebuilding. This is a real kernel/boot
 build, not full userdata assembly or hardware qualification. AppArmor and PMF
 fixes are in-tree; do not run an apply-backport script.
 
@@ -47,6 +52,17 @@ fakeroot python3 tools/package_userdata.py --build-id clean-noble-001 \
   --mksquashfs /path/to/mksquashfs --mke2fs /path/to/mke2fs \
   --img2simg /path/to/img2simg --avbtool /path/to/avbtool
 ```
+
+Before creating any packaging output, the command requires a completed schema-2
+report for the current clean checkout, lock and selected build ID. It verifies
+the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers
+and kernel modules. Missing results, extra files, changed helpers, mixed module
+releases, linked output directories and older report formats are rejected.
+Build directories are not interchangeable, even when their filenames match.
+To use a downloaded CI artifact, extract its tar under the matching build ID in
+`builds/pdx213/` and use the exact device commit and lock recorded in its report.
+Do not reuse an experimental output symlink as a clean build. Older reports
+must be replaced by a fresh build, not edited to claim a newer identity.
 
 This freshly extracts the locked rootfs under fakeroot, applies the public
 overlay, disables SSH, resets per-device state, runs the locale regression,

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Build the Noble kernel, DTBO, helpers and release boot from locked inputs."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,13 +10,9 @@ import sys
 import urllib.request
 from sources_lock import validate
 from dtbo_table import wrap
+from build_manifest import sha, build_identity, write_report, prepare_build
 
 ROOT=Path(__file__).resolve().parents[1]
-def sha(path):
-    h=hashlib.sha256()
-    with path.open('rb') as f:
-        for block in iter(lambda:f.read(1024*1024),b''):h.update(block)
-    return h.hexdigest()
 def run(*args,**kw):subprocess.run([str(x) for x in args],check=True,**kw)
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -37,6 +32,7 @@ def main():
         if commit!=lock[name]['commit']:raise SystemExit('Wrong '+name+' commit')
         if subprocess.check_output(['git','-C',str(path),'status','--porcelain'],text=True):raise SystemExit('Dirty source: '+name)
     if '23.1.7779620' not in (a.ndk/'source.properties').read_text():raise SystemExit('NDK r23b required')
+    expected_identity=build_identity(ROOT,a.build_id,lock)
     downloads=data/'downloads';downloads.mkdir(parents=True,exist_ok=True)
     for name in ['rootfs','initrd']:
         entry=lock[name];target=downloads/entry['filename']
@@ -47,11 +43,8 @@ def main():
             tmp.rename(target)
         if not target.exists() or sha(target)!=entry['sha256']:raise SystemExit('Missing or corrupt input: '+name)
     build=data/'builds/pdx213'/a.build_id
-    build.mkdir(parents=True,exist_ok=a.resume)
-    identity=build/'input-identity.json'
-    if identity.exists() and json.loads(identity.read_text())!=lock:raise SystemExit('Resume input identity mismatch')
-    identity.write_text(json.dumps(lock,indent=2)+'\n')
-    out=build/'out';out.mkdir(exist_ok=a.resume)
+    prepare_build(build,expected_identity,a.resume)
+    out=build/'out'
     toolbin=a.ndk.resolve()/'toolchains/llvm/prebuilt/linux-x86_64/bin'
     env=os.environ.copy();env['PATH']=str(toolbin)+os.pathsep+env['PATH'];env['TMPDIR']=str(build/'tmp');(build/'tmp').mkdir(exist_ok=a.resume)
     env['KBUILD_BUILD_VERSION']='1';env['KBUILD_BUILD_USER']='ut-ports';env['KBUILD_BUILD_HOST']='builder';env['KBUILD_BUILD_TIMESTAMP']='2026-10-09 00:00:00 UTC'
@@ -64,7 +57,12 @@ def main():
     shutil.copy2(kernel_out/'arch/arm64/boot/Image.gz-dtb',out/'Image.gz-dtb')
     payload=(kernel_out/'arch/arm64/boot/dts/somc/lagoon-lena-pdx213_generic-overlay.dtbo').read_bytes()
     (out/'dtbo.img').write_bytes(wrap(payload))
+    if (out/'modules').exists():shutil.rmtree(out/'modules')
     run(*make,'INSTALL_MOD_PATH='+str(out/'modules'),'INSTALL_MOD_STRIP=1','modules_install',env=env)
+    for link in (out/'modules/lib/modules').glob('*/build'):
+        if link.is_symlink():link.unlink()
+    for link in (out/'modules/lib/modules').glob('*/source'):
+        if link.is_symlink():link.unlink()
     clang=toolbin/'aarch64-linux-android30-clang'
     run(clang,'-nostdlib','-static','-Wl,-e,_start',ROOT/'device/reboot_bootloader.S','-o',out/'utxperia-reboot-bootloader')
     run(clang,'-shared','-fPIC','-O2',ROOT/'device/vndservicemanager-apparmor-compat.c','-o',out/'libvndservicemanager-apparmor-compat.so')
@@ -76,7 +74,6 @@ def main():
     run(sys.executable,ROOT/'tools/build_standalone_boot.py','--base',downloads/lock['initrd']['filename'],'--kernel',out/'Image.gz-dtb','--metadata',ROOT/'device/boot-metadata.json','--init',ROOT/'device/release-init','--extras',extras,'--mkbootimg',a.mkbootimg_source/'mkbootimg.py','--output',out/'boot.img')
     run(sys.executable,ROOT/'tools/test_standalone_boot.py',out/'boot.initrd.gz')
     run(sys.executable,ROOT/'tools/test_release_locale.py',ubuntu) if (ubuntu/'etc/locale.conf').read_text()=='LANG=en_US.UTF-8\n' else None
-    report={'scope':'kernel, DTBO, helper libraries and boot; no full userdata or hardware qualification','device_commit':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),'sources':lock,'artifacts':{str(f.relative_to(out)):sha(f) for f in out.rglob('*') if f.is_file() and not f.is_symlink()}}
-    (out/'build-report.json').write_text(json.dumps(report,indent=2)+'\n')
+    write_report(build,expected_identity,(kernel_out/'include/config/kernel.release').read_text().strip())
     print('Built '+str(out))
 if __name__=='__main__':main()

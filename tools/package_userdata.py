@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from build import sha
+from build_manifest import sha, build_identity, verify_build
 from sources_lock import validate
 ROOT=Path(__file__).resolve().parents[1]
 def run(*args):subprocess.run([str(x) for x in args],check=True)
@@ -22,6 +22,10 @@ def main():
     if Path(a.build_id).name!=a.build_id or a.build_id in ('.','..'):p.error('Safe build ID required')
     data=Path(os.environ['UT_PORTS_DATA_DIR']).resolve();build=data/'builds/pdx213'/a.build_id
     lock=validate(json.loads((ROOT/'sources.lock.json').read_text()),ROOT)['sources']
+    try:
+        modules=verify_build(build,build_identity(ROOT,a.build_id,lock))
+    except (ValueError,OSError) as error:
+        p.error(str(error))
     if sha(a.vendor)!=lock['vendor']['sha256']:p.error('Unqualified vendor input hash')
     for name in ['rootfs','halium_gsi']:
         if sha(data/'downloads'/lock[name]['filename'])!=lock[name]['sha256']:p.error('Input hash mismatch: '+name)
@@ -29,12 +33,10 @@ def main():
     root=output/'rootfs';root.mkdir()
     run('tar','--same-owner','-xf',data/'downloads'/lock['rootfs']['filename'],'-C',root)
     run(sys.executable,ROOT/'tools/prepare_release_rootfs.py','--root',root,'--artifacts',build)
-    modules=build/'out/modules/lib/modules'
-    if modules.is_dir():
-        shutil.copytree(modules,root/'lib/modules',dirs_exist_ok=True,symlinks=True)
-        for directory,dirs,files in os.walk(root/'lib/modules'):
-            os.chown(directory,0,0)
-            for name in files:os.chown(Path(directory)/name,0,0,follow_symlinks=False)
+    shutil.copytree(modules,root/'lib/modules',dirs_exist_ok=True)
+    for directory,dirs,files in os.walk(root/'lib/modules'):
+        os.chown(directory,0,0)
+        for name in files:os.chown(Path(directory)/name,0,0,follow_symlinks=False)
     run(sys.executable,ROOT/'tools/test_release_locale.py',root)
     stage=output/'stage';ut=stage/'utxperia';ut.mkdir(parents=True)
     for n in ['upper','work','userdata']:(ut/n).mkdir()
@@ -53,6 +55,6 @@ def main():
     run(sys.executable,ROOT/'tools/sparse_raw_chunks.py',fill,output/'userdata.img')
     run(a.avbtool,'make_vbmeta_image','--output',output/'vbmeta.img','--flags','3','--algorithm','NONE')
     tools={name:{'sha256':sha(getattr(a,name))} for name in ['mksquashfs','mke2fs','img2simg','avbtool']}
-    (output/'assembly-report.json').write_text(json.dumps({'scope':'local unqualified image assembly; no install/redistribution approval','tools':tools,'images':{n:sha(output/n) for n in ['userdata.img','vbmeta.img']}},indent=2)+'\n')
+    (output/'assembly-report.json').write_text(json.dumps({'scope':'local unqualified image assembly; no install/redistribution approval','build_report_sha256':sha(build/'out/build-report.json'),'input_identity_sha256':sha(build/'input-identity.json'),'tools':tools,'images':{n:sha(output/n) for n in ['userdata.img','vbmeta.img']}},indent=2)+'\n')
     print(output)
 if __name__=='__main__':main()
