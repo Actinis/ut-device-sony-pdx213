@@ -1,0 +1,29 @@
+name: Device bug
+description: Report a problem with an Actinis Ubuntu Touch port
+title: "[device] Short description"
+labels: [bug]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Device model and variant
+      placeholder: Sony Xperia 10 III XQ-BT52 / pdx213
+    validations:
+      required: true
+  - type: input
+    id: release
+    attributes:
+      label: Ubuntu Touch version and port release or commit
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs and hardware test results
+      description: Remove keys, tokens, device serials, phone numbers and other private data.

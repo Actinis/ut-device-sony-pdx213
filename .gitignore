@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+/build/
+/out/
+/downloads/
+/sources/
+.env
