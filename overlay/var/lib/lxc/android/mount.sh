@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 for spec in 'null 1 3 666' 'kmsg 1 11 600' 'random 1 8 666' 'urandom 1 9 666'; do
+    # Each literal spec is an intentional four-field tuple.
+    # shellcheck disable=SC2086
     set -- $spec
     [ -c "${LXC_ROOTFS_MOUNT}/dev/$1" ] || mknod -m "$4" "${LXC_ROOTFS_MOUNT}/dev/$1" c "$2" "$3"
 done

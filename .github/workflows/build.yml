@@ -10,9 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
-    env:
-      UT_PORTS_DATA_DIR: ${{ runner.temp }}/ut-ports-data
     steps:
+      - name: Set build data directory
+        run: echo "UT_PORTS_DATA_DIR=$RUNNER_TEMP/ut-ports-data" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
