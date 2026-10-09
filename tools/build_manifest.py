@@ -10,6 +10,9 @@ REQUIRED_ARTIFACTS = {
     'utxperia-reboot-bootloader', 'libvndservicemanager-apparmor-compat.so',
     'gnss/libubuntu_application_api.so', 'gnss/libubuntu_application_old.so',
     'gnss/libutxperia-gnss-assistance.so',
+    'nfc/nfcd', 'nfc/binder.so', 'nfc/libncicore.so.1',
+    'nfc/libnciplugin.so.1', 'nfc/nfc_nci_nxp.so',
+    'nfc/vendor.nxp.nxpese@1.0.so', 'nfc/nfc-build-report.json',
 }
 
 
@@ -89,7 +92,7 @@ def verify_build(build, expected_identity):
 
 def write_report(build, identity, kernel_release):
     report = dict(identity, kernel_release=kernel_release,
-                  scope='kernel, DTBO, helper libraries and boot; no userdata or hardware qualification',
+                  scope='kernel, DTBO, helper, GNSS/NFC libraries and boot; no userdata or hardware qualification',
                   artifacts=inventory(build / 'out'))
     check_artifacts(build / 'out', report)
     temporary = build / 'build-report.tmp'

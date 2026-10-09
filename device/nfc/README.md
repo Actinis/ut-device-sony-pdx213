@@ -1,20 +1,29 @@
 # NFC qualification sources
 
-Experimental source patches for the XQ-BT52 NFC stack. They are not connected
-to the production image build yet. Existing images do not include them
-automatically.
+The Noble image build compiles the SN100 HAL, its public HIDL interface library,
+NCI core/plugin, binder plugin and daemon from pinned public sources. The rootfs
+packager installs these as one set. Build integration does not itself qualify
+the resulting images on hardware.
 
-The installed qualification stack reads and writes UTF-8 Text NDEF on a
-preformatted MIFARE Classic 1K card through org.neard.Tag.Write. A real-card
-write, independent reread, restoration and byte-for-byte original NDEF
-comparison passed. Reader startup after reboot and three adapter power cycles
-are qualified. Writer startup after reboot has not been tested.
+## Qualification on XQ-BT52
 
-Twenty-two ARM64 reader/writer tests pass, covering the NXP MAD CRC reference,
-authentication failure, corrupt/access-denied sector permissions, short reads,
-negative write acknowledgements, readback mismatch, cancellation/removal,
-bounds, concurrent requests, crossing sector boundaries, preservation of
-following TLVs and growing a message into unused bytes after a Terminator. These tests use synthetic card data.
+| Operation | Evidence | Limit |
+| --- | --- | --- |
+| Classic 1K NDEF Text reading | Real card read and rediscovery; reader worked after reboot | One public NDEF-formatted card |
+| Classic 1K UTF-8 Text writing | Real write, independent reread, original restoration and byte-for-byte comparison passed | Existing writable public NDEF mapping only; writer after reboot untested |
+| NFC off/on | Three power cycles and reread passed | Screen unlocked during tests |
+| ISO-DEP discovery/exchange | Residence-permit card remained present for 15 seconds; bank card passed 104 consecutive presence checks without interface errors in a repeated test | No protected applications read; earlier transient RF timeouts have no established cause |
+| NTAG/Type 2, Type 3, Type 4 NDEF, ISO15693 | No physical qualification | ISO-DEP detection is not Type 4 NDEF qualification |
+| Formatting, other write record types, private keys, card emulation, payments | Not qualified | No payment application is provided |
+| Suspend/resume, screen-lock behavior, long-term reliability | Not qualified | Short foreground tests do not establish these |
+
+Twenty-two ARM64 reader/writer tests passed with synthetic card data: NXP MAD
+CRC reference, authentication failure, corrupt/access-denied sector permissions,
+short reads, negative acknowledgements, readback mismatch, cancellation/removal,
+bounds, concurrent requests, crossing sector boundaries, preservation of following
+TLVs and growth into unused bytes after a Terminator. These tests do not replace
+physical qualification. Binder initialization/cancellation and the complete NCI2
+state-machine regression suite remain qualification gaps.
 
 ## Supported write operation
 
@@ -50,33 +59,36 @@ busctl --system call org.neard /nfc0/tag0 org.neard.Tag Write 'a{sv}' 4 \
 The tag path changes on rediscovery. Use the actual current path. This writes
 through D-Bus; a graphical tag-writing application is not supplied here.
 
-## Build integration remaining
+## Reproducible build inputs and runtime
 
-The experimental input manifest pins upstream commits and patch SHA256 hashes.
-Copyright and licensing notices remain in the patches. Do not distribute
-libraries extracted from a personal phone, card identifiers, contents or raw
-private logs. Only synthetic fixtures belong in the public source tree.
+`inputs.json` pins eight upstream Git commits, five patch hashes and ten Noble
+or UBports development packages. `ORIGINS.json` records the origins of tracked
+public HIDL/VNDK headers and generated interface sources. Common headers come
+from the locked GNSS bundle. `sources.lock.json` schema 4 hashes the complete
+NFC source inventory and declares these dependencies. Licenses and copyright
+notices are retained. No linker library is obtained from a connected phone.
 
-Before using these patches in normal image builds: pin Noble gdbus-codegen and
-replace compatibility flags; extract linker inputs from locked Android/Ubuntu
-images; update NCI2 fixtures; cover binder initialization/cancellation; preserve
-distribution daemon integration; remove diagnostic logs; add mandatory NFC
-outputs and packaging; enforce relinking when static core libraries change.
-The experimental scripts still use local tool/header paths and must not ship.
+`tools/build_nfc.py` uses the explicitly supplied NDK r23b, locked GSI and Noble
+rootfs, separate work/output directories, and downloads cache. Portable Python
+`gdbus-codegen` comes from the pinned Noble package. Every upstream checkout is
+fresh and patches are checked before application. The report binds input and
+lock hashes, runtime linker-input identities and all six output hashes. Missing,
+linked or changed outputs and mismatched resume inputs are rejected.
 
-## Qualified runtime layout
+The normal builder requires the daemon, binder plugin, NCI libraries, SN100 HAL,
+public NXP eSE HIDL interface library and NFC report. The interface library is
+transport glue; it does not implement or qualify secure-element functions.
+Packaging validates the enclosing completed build report before rootfs changes.
 
-`runtime/27-utxperia-nfc` is the qualified LXC pre-start hook, installed on the
-phone under `/var/lib/lxc/android/pre-start.d/`. It copies the replacement HAL
-into the assembled vendor overlay; it does not flash the vendor partition.
-`runtime/utxperia-nfc.conf` is the daemon override installed under
-`/etc/systemd/system/nfcd.service.d/`. These files are examples of the qualified
-runtime setup and are not automatically installed by the image builder.
+The daemon override under `overlay/etc/systemd/system/nfcd.service.d/` loads the
+complete stack from `/usr/local/lib/utxperia/nfc/`. The daemon honors the distribution service
+setting `NFCD_NO_STOP_POLL_LOOP=1` so client cleanup does not disable discovery.
+Its plugin directory links the
+adapted binder plugin and the other distribution plugins. The LXC pre-start
+hook copies the HAL and its interface library into the assembled vendor overlay;
+it does not flash the vendor partition. Deploy all mutually dependent binaries
+together. `runtime/` contains matching examples of these integration files.
 
-The runtime directory `/usr/local/lib/utxperia/nfc/` must contain `nfcd`,
-`nfc_nci_nxp.so`, `binder.so`, `libncicore.so.1`, `libnciplugin.so.1`, and a
-`plugins/` directory. The latter links `binder.so` to the adapted plugin and
-links the other plugins to their installed `/usr/lib/nfcd/plugins/` counterparts.
-Deploy all mutually dependent binaries together. Do not copy the hook into an
-image without providing its required HAL artifact, or enable the service override
-without the complete daemon/plugin/library set.
+Card identifiers, card contents, backups and raw private logs are excluded from
+public sources. Only synthetic fixtures are published. Build success, phone
+qualification and installation/redistribution qualification are separate claims.

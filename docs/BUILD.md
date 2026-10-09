@@ -1,7 +1,7 @@
 # Noble source build
 
 Use Linux x86_64 with GNU make, a C compiler, flex, bison, bc, OpenSSL/ELF
-headers, Python 3, tar, unzip, readelf, kmod, debugfs and qemu-aarch64. For full local image
+headers, Python 3, tar with zstd support, ar, pkg-config, unzip, readelf, kmod, debugfs and qemu-aarch64. For full local image
 assembly also install fakeroot, mksquashfs, mke2fs, img2simg and avbtool.
 
 ```sh
@@ -27,7 +27,7 @@ python3 tools/build.py \
 
 The build verifies the exact Git commits, tracked input hashes, Noble rootfs
 initrd and GSI checksums. It compiles Image.gz-dtb, DTBO, installs kernel modules, builds the Linux syscall helper
-Android compatibility library and GNSS libraries; stages ext4 tools from the locked rootfs;
+Android compatibility library, GNSS libraries and the pinned NFC stack; stages ext4 tools from the locked rootfs;
 creates the release boot image; and executes its BusyBox shell under QEMU.
 `input-identity.json` and the schema-2 `build-report.json` bind the build ID,
 clean device commit, exact lock checksum and complete dependency identity.
@@ -39,7 +39,7 @@ build, not full userdata assembly or hardware qualification. AppArmor and PMF
 fixes are in-tree; do not run an apply-backport script.
 
 CI retains kernel/boot build results for 30 days as a GitHub Actions artifact,
-including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS libraries, build-report and input
+including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS/NFC libraries, build-report and input
 identity. The tar archive preserves executable modes. These are experimental
 build outputs, not an installation release; vendor/OEM and userdata are excluded.
 
@@ -56,7 +56,7 @@ fakeroot python3 tools/package_userdata.py --build-id clean-noble-001 \
 
 Before creating any packaging output, the command requires a completed schema-2
 report for the current clean checkout, lock and selected build ID. It verifies
-the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers/GNSS libraries
+the complete artifact inventory, hashes, modes and mandatory boot/DTBO/helpers/GNSS/NFC libraries
 and kernel modules. Missing results, extra files, changed helpers, mixed module
 releases, linked output directories and older report formats are rejected.
 Build directories are not interchangeable, even when their filenames match.
@@ -74,3 +74,7 @@ is applied in RAM at runtime; immutable Sony images are not rewritten.
 The current scripts assemble local experimental images only. Do not regard a
 build as installation, restoration or redistribution qualification. There is
 no automatic release publication, tag creation, flashing or OTA.
+
+NFC dependencies, runtime layout and hardware evidence are documented in
+[device/nfc/README.md](../device/nfc/README.md). The six NFC binaries and their
+input/output report are mandatory artifacts; incomplete NFC builds cannot be packaged.

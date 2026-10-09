@@ -1,6 +1,6 @@
 # Locked inputs and build scope
 
-Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 3 is
+Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 4 is
 validated by `tools/sources_lock.py`, CI, the build and release metadata tool.
 `locked` means that the listed input identities are pinned, not that all inputs
 are downloadable or a complete installation has been reproduced.
@@ -61,3 +61,13 @@ is preserved under a renamed SONAME to retain sensors and other platform APIs.
 The Linux assistance library links only glibc from the locked Noble rootfs.
 LGPL author notices and licence, Apache-2.0 licence and header notices are retained.
 No modem firmware, device-specific APN, subscriber ID or private GNSS log is included.
+
+## NFC inputs
+
+The derived NFC entry hashes every tracked file under `device/nfc/` and depends
+on the GNSS header bundle, NDK, Noble rootfs and GSI. `device/nfc/inputs.json`
+pins public source commits, patches and development package versions/URLs/SHA256.
+Generated HIDL sources and supplemental public headers are tracked inputs with
+provenance in `ORIGINS.json`; normal builds do not regenerate them. Android
+linker inputs come from the locked GSI; Linux runtime libraries come from the
+locked Noble rootfs. No personal phone library is a build input.

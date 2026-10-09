@@ -11,8 +11,8 @@ def validate(data, repository=None):
     need(data.get('status') == 'locked', 'Sources are not locked')
     sources=data.get('sources',{})
     schema=data.get('schema_version')
-    need(schema in (1,2,3),'Unknown lock schema')
-    need(set(sources) == (REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
+    need(schema in (1,2,3,4),'Unknown lock schema')
+    need(set(sources) == (REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
     for name, entry in sources.items():
         kind=entry.get('kind') if schema>=2 else 'git' if name=='kernel' else 'artifact'
         need(kind in ('git','artifact','manual','derived'),'Unknown source kind')
@@ -34,8 +34,9 @@ def validate(data, repository=None):
                 need(not path.is_absolute() and '..' not in path.parts,'Unsafe tracked source path')
                 need(bool(re.fullmatch('[0-9a-f]{64}',checksum)),'Tracked file hash required')
                 if repository:
+                    need((Path(repository)/path).is_file(),'Missing tracked input: '+filename)
                     need(hashlib.sha256((Path(repository)/path).read_bytes()).hexdigest()==checksum,'Tracked input hash mismatch: '+filename)
-    if schema==3:
+    if schema>=3:
         gnss=sources['gnss']
         need(gnss.get('kind')=='derived' and set(gnss.get('dependencies',[]))=={'toolchain','rootfs','halium_gsi'},'Incomplete GNSS dependencies')
         need(bool(gnss.get('files')),'GNSS source hashes required')
@@ -51,4 +52,45 @@ def validate(data, repository=None):
                 need(all(provenance[name].get(key)==value for key,value in origin.items()),'GNSS provenance mismatch: '+name)
             tracked={path.relative_to(repository).as_posix() for path in (Path(repository)/'device/gnss').rglob('*') if path.is_file()}
             need(tracked<=set(gnss['files']),'Unpinned GNSS source/header')
+    if schema==4:
+        nfc=sources['nfc']
+        need(nfc.get('kind')=='derived' and set(nfc.get('dependencies',[]))=={'gnss','toolchain','rootfs','halium_gsi'},'Incomplete NFC dependencies')
+        need(bool(nfc.get('files')),'NFC input hashes required')
+        if repository:
+            import json
+            base=Path(repository)/'device/nfc'
+            tracked={p.relative_to(repository).as_posix() for p in base.rglob('*') if p.is_file()}
+            need(tracked==set(nfc['files']),'Unpinned or stale NFC source inventory')
+            validate_nfc_inputs(json.loads((base/'inputs.json').read_text()),base)
+            origins=json.loads((base/'ORIGINS.json').read_text())
+            for name in ('interfaces','vndk_headers','generator'):
+                origin=origins.get(name,{})
+                need(str(origin.get('url','')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}',origin.get('commit',''))),'Invalid NFC header provenance')
+    return data
+
+
+def validate_nfc_inputs(data, root=None):
+    def need(condition,message):
+        if not condition:raise ValueError(message)
+    need(data.get('schema_version')==1,'Unknown NFC input schema')
+    sources=data.get('sources',[])
+    names=[e.get('component') for e in sources]
+    need(len(names)==8 and set(names)=={'hal','binder-plugin','nci-plugin','ncicore','nfcd','ese','ese-nxp','ese-extns'},'Incomplete NFC git input inventory')
+    for e in sources:
+        need(str(e.get('url','')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}',e.get('commit',''))),'Unpinned NFC git input')
+        patched=e['component'] in {'hal','binder-plugin','nci-plugin','ncicore','nfcd'}
+        need(('patch' in e)==patched,'Incomplete NFC patch inventory')
+        if patched:
+            need(e['patch']==e['component']+'.patch','Unsafe NFC patch filename')
+            need(bool(re.fullmatch('[0-9a-f]{64}',e.get('patch_sha256',''))),'Missing NFC patch hash')
+            if root:need(hashlib.sha256((Path(root)/e['patch']).read_bytes()).hexdigest()==e['patch_sha256'],'NFC patch hash mismatch')
+    packages=data.get('development_headers',[])
+    names=[e.get('name') for e in packages]
+    need(len(names)==10 and len(set(names))==10,'Incomplete NFC package inventory')
+    need(set(names)=={'libgbinder-dev','libglibutil-dev','libncicore-dev','libnciplugin-dev','libnfcd-dev','libnfcdef-dev','libc6-dev','libglib2.0-dev','linux-libc-dev','libglib2.0-dev-bin'},'Unknown NFC development package')
+    for e in packages:
+        need(bool(e.get('version')) and str(e.get('url','')).startswith('https://'),'Missing NFC package provenance')
+        need(bool(re.fullmatch('[0-9a-f]{64}',e.get('sha256',''))),'Unpinned NFC package')
+        name=e.get('filename','')
+        need(bool(name) and Path(name).name==name and name not in ('.','..') and e['url'].endswith('/'+name),'Unsafe NFC package filename')
     return data

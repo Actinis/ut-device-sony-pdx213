@@ -73,6 +73,7 @@ def main():
     android=build/'android-input';android.mkdir(exist_ok=a.resume)
     run('tar','--no-same-owner','-xf',downloads/lock['halium_gsi']['filename'],'-C',android)
     run(sys.executable,ROOT/'tools/build_gnss.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--output',out/'gnss')
+    run(sys.executable,ROOT/'tools/build_nfc.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--work',build/'nfc','--output',out/'nfc','--downloads',downloads)
     extras=build/'boot-extras'
     run(sys.executable,ROOT/'tools/stage_boot_filesystem.py','--ubuntu-root',ubuntu,'--reboot-helper',out/'utxperia-reboot-bootloader','--output',extras)
     run(sys.executable,ROOT/'tools/build_standalone_boot.py','--base',downloads/lock['initrd']['filename'],'--kernel',out/'Image.gz-dtb','--metadata',ROOT/'device/boot-metadata.json','--init',ROOT/'device/release-init','--extras',extras,'--mkbootimg',a.mkbootimg_source/'mkbootimg.py','--output',out/'boot.img')

@@ -77,6 +77,7 @@ class CompletedBuild(unittest.TestCase):
 
     def test_missing_helpers_modules_and_extra_module_fail(self):
         for name in ['dtbo.img', 'libvndservicemanager-apparmor-compat.so',
+                     *sorted(n for n in manifest.REQUIRED_ARTIFACTS if n.startswith('nfc/')),
                      'modules/lib/modules/' + self.release + '/lcd.ko',
                      'modules/lib/modules/' + self.release + '/modules.dep']:
             path = self.build / 'out' / name

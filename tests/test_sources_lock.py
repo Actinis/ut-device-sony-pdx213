@@ -28,3 +28,27 @@ class Lock(unittest.TestCase):
             if change=='dependency':gnss['dependencies'].remove('halium_gsi')
             if change=='source':del gnss['files']['device/gnss/gnss.cpp']
             with self.assertRaises(ValueError):module.validate(bad,root)
+
+    def test_nfc_inventory_and_dependency_mutations(self):
+        root=Path(__file__).resolve().parents[1]
+        data=json.loads((root/'sources.lock.json').read_text())
+        for change in ('dependency','missing','stale','hash'):
+            bad=json.loads(json.dumps(data));nfc=bad['sources']['nfc']
+            if change=='dependency':nfc['dependencies'].remove('gnss')
+            if change=='missing':del nfc['files']['device/nfc/inputs.json']
+            if change=='stale':nfc['files']['device/nfc/nonexistent']='a'*64
+            if change=='hash':nfc['files']['device/nfc/inputs.json']='b'*64
+            with self.subTest(change=change),self.assertRaises(ValueError):module.validate(bad,root)
+
+    def test_nfc_package_patch_and_revision_mutations(self):
+        root=Path(__file__).resolve().parents[1]/'device/nfc'
+        data=json.loads((root/'inputs.json').read_text())
+        for change in ('revision','patch','hash','package','url','filename'):
+            bad=json.loads(json.dumps(data))
+            if change=='revision':bad['sources'][0]['commit']='main'
+            if change=='patch':bad['sources'][0]['patch']='../outside.patch'
+            if change=='hash':bad['sources'][0]['patch_sha256']='a'*64
+            if change=='package':bad['development_headers'].pop()
+            if change=='url':bad['development_headers'][0]['url']='http://example.org/package.deb'
+            if change=='filename':bad['development_headers'][0]['filename']='../escape.deb'
+            with self.subTest(change=change),self.assertRaises(ValueError):module.validate_nfc_inputs(bad,root)

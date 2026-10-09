@@ -1,0 +1,16 @@
+{
+  "interfaces": {
+    "url": "https://github.com/GrapheneOS/platform_hardware_interfaces",
+    "commit": "10f50d727929257755d4bc3fb59758dc10e7a37b"
+  },
+  "vndk_headers": {
+    "url": "https://android.googlesource.com/platform/prebuilts/vndk/v31",
+    "commit": "1a059a5a203352d3e0c2fd3ccff5719cc37fc340",
+    "scope": "only compilation dependencies from arm64/include; headers retain their license notices"
+  },
+  "generator": {
+    "url": "https://android.googlesource.com/platform/prebuilts/build-tools",
+    "commit": "9b6c8c6a2f582a9d7817fd8275c8014959c60cc4"
+  },
+  "note": "Generated HIDL files are tracked inputs; base/manager HIDL headers and shared VNDK dependencies come from the pinned GNSS header bundle. NXP interface definitions come from pinned HAL and secure-element sources."
+}

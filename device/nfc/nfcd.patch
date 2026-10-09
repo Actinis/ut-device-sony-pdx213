@@ -72,148 +72,6 @@ index 624fd3a..7b7595c 100644
  NfcTag*
  nfc_adapter_add_tag_t2(
      NfcAdapter* self,
-diff --git a/core/src/nfc_tag_p.h b/core/src/nfc_tag_p.h
-index b55927f..33899e4 100644
---- a/core/src/nfc_tag_p.h
-+++ b/core/src/nfc_tag_p.h
-@@ -51,6 +51,11 @@ nfc_tag_new(
-     const NfcParamPoll* poll)
-     NFCD_INTERNAL;
- 
-+guint8 nfc_tag_mfc_mad_crc(const guint8* mad) NFCD_INTERNAL;
-+
-+NfcTag*
-+nfc_tag_mfc_new(NfcTarget* target, const NfcParamPollA* poll) NFCD_INTERNAL;
-+
- NfcTagType2*
- nfc_tag_t2_new(
-     NfcTarget* target,
-diff --git a/plugins/Makefile b/plugins/Makefile
-index 677f629..b7a923d 100644
---- a/plugins/Makefile
-+++ b/plugins/Makefile
-@@ -343,7 +343,7 @@ $(COVERAGE_BUILD_DIR):
- 	mkdir -p $@
- 
- $(GEN_DIR)/%.c: %.xml
--	gdbus-codegen --generate-c-code $(@:%.c=%) $<
-+	gdbus-codegen --glib-max-allowed 2.80 --generate-c-code $(@:%.c=%) $<
- 
- $(DEBUG_BUILD_DIR)/%.o: $(GEN_DIR)/%.c
- 	$(CC) -c $(DEBUG_CFLAGS) -MT"$@" -MF"$(@:%.o=%.d)" $< -o $@
-diff --git a/plugins/dbus_neard/dbus_neard_tag.c b/plugins/dbus_neard/dbus_neard_tag.c
-index 611064b..2502a87 100644
---- a/plugins/dbus_neard/dbus_neard_tag.c
-+++ b/plugins/dbus_neard/dbus_neard_tag.c
-@@ -53,6 +53,7 @@ enum {
- 
- enum {
-     NEARD_CALL_DEACTIVATE,
-+    NEARD_CALL_WRITE,
-     NEARD_EVENT_COUNT
- };
- 
-@@ -210,6 +211,7 @@ dbus_neard_tag_initialized(
- 
-     /* This callbacks should only be invoked once, but just in case... */
-     nfc_tag_remove_handlers(tag, self->tag_event_id + TAG_INITIALIZED, 1);
-+    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
-     dbus_neard_tag_export_records(self);
-     if (tag->ndef) {
-         dbus_neard_manager_handle_ndef(self->agent_manager, tag->ndef);
-@@ -240,6 +242,72 @@ dbus_neard_tag_handle_deactivate(
-     return TRUE;
- }
- 
-+static void dbus_neard_tag_write_done(NfcTag* tag, gboolean success,
-+    const char* reason, void* data)
-+{
-+    GDBusMethodInvocation* call=data;
-+    if(success) {
-+        g_dbus_method_invocation_return_value(call,NULL);
-+        /* Rediscover to refresh both NDEF and neard record objects. */
-+        nfc_tag_deactivate(tag);
-+    } else g_dbus_method_invocation_return_dbus_error(call,
-+        "org.neard.Error.Failed",reason);
-+    g_object_unref(call);
-+}
-+
-+static gboolean dbus_neard_tag_handle_write(OrgNeardTag* iface,
-+    GDBusMethodInvocation* call,GVariant* attributes,gpointer user_data)
-+{
-+    DBusNeardTag* self=user_data;
-+    const char *type=NULL,*text=NULL,*language="en",*encoding="UTF-8";
-+    GByteArray* raw;guint payload,langlen;guint8 header[7];
-+    if(!g_variant_lookup(attributes,"Type","&s",&type) || strcmp(type,"Text") ||
-+       !g_variant_lookup(attributes,"Representation","&s",&text)) {
-+        g_dbus_method_invocation_return_dbus_error(call,
-+            "org.neard.Error.InvalidArguments","Only Text NDEF records are supported");
-+        return TRUE;
-+    }
-+    g_variant_lookup(attributes,"Language","&s",&language);
-+    g_variant_lookup(attributes,"Encoding","&s",&encoding);
-+    langlen=strlen(language);
-+    if(strcmp(encoding,"UTF-8") || langlen>63 || !langlen || strlen(text)>700 ||
-+        !g_utf8_validate(text,-1,NULL)) {
-+        g_dbus_method_invocation_return_dbus_error(call,
-+            "org.neard.Error.InvalidArguments","Invalid text, language or encoding");
-+        return TRUE;
-+    }
-+    {
-+        guint i;
-+        for(i=0;i<langlen;i++) {
-+            if(!g_ascii_isalnum(language[i]) && language[i]!='-') {
-+                g_dbus_method_invocation_return_dbus_error(call,
-+                    "org.neard.Error.InvalidArguments","Language must be an ASCII language tag");
-+                return TRUE;
-+            }
-+        }
-+    }
-+    payload=1+langlen+strlen(text);raw=g_byte_array_new();
-+    header[0]=payload<256 ? 0xd1 : 0xc1;header[1]=1;
-+    if(payload<256) {
-+        header[2]=payload;header[3]='T';g_byte_array_append(raw,header,4);
-+    } else {
-+        header[2]=header[3]=0;header[4]=payload>>8;header[5]=payload;
-+        header[6]='T';g_byte_array_append(raw,header,7);
-+    }
-+    header[0]=langlen;g_byte_array_append(raw,header,1);
-+    g_byte_array_append(raw,(const guint8*)language,langlen);
-+    g_byte_array_append(raw,(const guint8*)text,strlen(text));
-+    g_object_ref(call);
-+    if(!nfc_tag_mfc_write_ndef(self->tag,raw->data,raw->len,
-+        dbus_neard_tag_write_done,call)) {
-+        g_object_unref(call);
-+        g_dbus_method_invocation_return_dbus_error(call,
-+            "org.neard.Error.NotSupported","Tag is busy, read-only, too small or unsupported");
-+    }
-+    g_byte_array_unref(raw);
-+    return TRUE;
-+}
-+
- DBusNeardTag*
- dbus_neard_tag_new(
-     NfcTag* tag,
-@@ -267,6 +335,10 @@ dbus_neard_tag_new(
-         g_signal_connect(self->iface, "handle-deactivate",
-         G_CALLBACK(dbus_neard_tag_handle_deactivate), self);
- 
-+    self->neard_event_id[NEARD_CALL_WRITE] =
-+        g_signal_connect(self->iface, "handle-write",
-+        G_CALLBACK(dbus_neard_tag_handle_write), self);
-+
-     switch (tag->type) {
-     case NFC_TAG_TYPE_FELICA:
-         protocol = NEARD_PROTOCOL_FELICA;
-@@ -297,7 +369,7 @@ dbus_neard_tag_new(
-         org_neard_tag_set_type_(self->iface, type->name);
-     }
-     org_neard_tag_set_adapter(self->iface, adapter_path);
--    org_neard_tag_set_read_only(self->iface, TRUE);
-+    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
-     g_dbus_object_manager_server_export(object_manager, object);
-     g_object_unref(object);
- 
 diff --git a/core/src/nfc_tag_mfc.c b/core/src/nfc_tag_mfc.c
 new file mode 100644
 index 0000000..8c73b21
@@ -633,6 +491,174 @@ index 0000000..8c73b21
 +    mfc_write_next(w);
 +    return TRUE;
 +}
+diff --git a/core/src/nfc_tag_p.h b/core/src/nfc_tag_p.h
+index b55927f..33899e4 100644
+--- a/core/src/nfc_tag_p.h
++++ b/core/src/nfc_tag_p.h
+@@ -51,6 +51,11 @@ nfc_tag_new(
+     const NfcParamPoll* poll)
+     NFCD_INTERNAL;
+ 
++guint8 nfc_tag_mfc_mad_crc(const guint8* mad) NFCD_INTERNAL;
++
++NfcTag*
++nfc_tag_mfc_new(NfcTarget* target, const NfcParamPollA* poll) NFCD_INTERNAL;
++
+ NfcTagType2*
+ nfc_tag_t2_new(
+     NfcTarget* target,
+diff --git a/plugins/Makefile b/plugins/Makefile
+index 677f629..b7a923d 100644
+--- a/plugins/Makefile
++++ b/plugins/Makefile
+@@ -343,7 +343,7 @@ $(COVERAGE_BUILD_DIR):
+ 	mkdir -p $@
+ 
+ $(GEN_DIR)/%.c: %.xml
+-	gdbus-codegen --generate-c-code $(@:%.c=%) $<
++	gdbus-codegen --glib-max-allowed 2.80 --generate-c-code $(@:%.c=%) $<
+ 
+ $(DEBUG_BUILD_DIR)/%.o: $(GEN_DIR)/%.c
+ 	$(CC) -c $(DEBUG_CFLAGS) -MT"$@" -MF"$(@:%.o=%.d)" $< -o $@
+diff --git a/plugins/dbus_neard/dbus_neard_adapter.c b/plugins/dbus_neard/dbus_neard_adapter.c
+index f3f1598..b772485 100644
+--- a/plugins/dbus_neard/dbus_neard_adapter.c
++++ b/plugins/dbus_neard/dbus_neard_adapter.c
+@@ -244,7 +244,11 @@ dbus_neard_adapter_handle_stop_poll_loop(
+     DBusNeardAdapter* self = user_data;
+ 
+     GDEBUG("StopPollLoop");
+-    nfc_adapter_request_mode(self->adapter, NFC_MODE_NONE);
++    /* Noble's adapter clients use StopPollLoop during cleanup. The
++     * distribution service opts out so the next client can still discover. */
++    if (g_strcmp0(g_getenv("NFCD_NO_STOP_POLL_LOOP"), "1")) {
++        nfc_adapter_request_mode(self->adapter, NFC_MODE_NONE);
++    }
+     org_neard_adapter_complete_stop_poll_loop(iface, call);
+     return TRUE;
+ }
+diff --git a/plugins/dbus_neard/dbus_neard_tag.c b/plugins/dbus_neard/dbus_neard_tag.c
+index 611064b..2502a87 100644
+--- a/plugins/dbus_neard/dbus_neard_tag.c
++++ b/plugins/dbus_neard/dbus_neard_tag.c
+@@ -53,6 +53,7 @@ enum {
+ 
+ enum {
+     NEARD_CALL_DEACTIVATE,
++    NEARD_CALL_WRITE,
+     NEARD_EVENT_COUNT
+ };
+ 
+@@ -210,6 +211,7 @@ dbus_neard_tag_initialized(
+ 
+     /* This callbacks should only be invoked once, but just in case... */
+     nfc_tag_remove_handlers(tag, self->tag_event_id + TAG_INITIALIZED, 1);
++    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
+     dbus_neard_tag_export_records(self);
+     if (tag->ndef) {
+         dbus_neard_manager_handle_ndef(self->agent_manager, tag->ndef);
+@@ -240,6 +242,72 @@ dbus_neard_tag_handle_deactivate(
+     return TRUE;
+ }
+ 
++static void dbus_neard_tag_write_done(NfcTag* tag, gboolean success,
++    const char* reason, void* data)
++{
++    GDBusMethodInvocation* call=data;
++    if(success) {
++        g_dbus_method_invocation_return_value(call,NULL);
++        /* Rediscover to refresh both NDEF and neard record objects. */
++        nfc_tag_deactivate(tag);
++    } else g_dbus_method_invocation_return_dbus_error(call,
++        "org.neard.Error.Failed",reason);
++    g_object_unref(call);
++}
++
++static gboolean dbus_neard_tag_handle_write(OrgNeardTag* iface,
++    GDBusMethodInvocation* call,GVariant* attributes,gpointer user_data)
++{
++    DBusNeardTag* self=user_data;
++    const char *type=NULL,*text=NULL,*language="en",*encoding="UTF-8";
++    GByteArray* raw;guint payload,langlen;guint8 header[7];
++    if(!g_variant_lookup(attributes,"Type","&s",&type) || strcmp(type,"Text") ||
++       !g_variant_lookup(attributes,"Representation","&s",&text)) {
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.InvalidArguments","Only Text NDEF records are supported");
++        return TRUE;
++    }
++    g_variant_lookup(attributes,"Language","&s",&language);
++    g_variant_lookup(attributes,"Encoding","&s",&encoding);
++    langlen=strlen(language);
++    if(strcmp(encoding,"UTF-8") || langlen>63 || !langlen || strlen(text)>700 ||
++        !g_utf8_validate(text,-1,NULL)) {
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.InvalidArguments","Invalid text, language or encoding");
++        return TRUE;
++    }
++    {
++        guint i;
++        for(i=0;i<langlen;i++) {
++            if(!g_ascii_isalnum(language[i]) && language[i]!='-') {
++                g_dbus_method_invocation_return_dbus_error(call,
++                    "org.neard.Error.InvalidArguments","Language must be an ASCII language tag");
++                return TRUE;
++            }
++        }
++    }
++    payload=1+langlen+strlen(text);raw=g_byte_array_new();
++    header[0]=payload<256 ? 0xd1 : 0xc1;header[1]=1;
++    if(payload<256) {
++        header[2]=payload;header[3]='T';g_byte_array_append(raw,header,4);
++    } else {
++        header[2]=header[3]=0;header[4]=payload>>8;header[5]=payload;
++        header[6]='T';g_byte_array_append(raw,header,7);
++    }
++    header[0]=langlen;g_byte_array_append(raw,header,1);
++    g_byte_array_append(raw,(const guint8*)language,langlen);
++    g_byte_array_append(raw,(const guint8*)text,strlen(text));
++    g_object_ref(call);
++    if(!nfc_tag_mfc_write_ndef(self->tag,raw->data,raw->len,
++        dbus_neard_tag_write_done,call)) {
++        g_object_unref(call);
++        g_dbus_method_invocation_return_dbus_error(call,
++            "org.neard.Error.NotSupported","Tag is busy, read-only, too small or unsupported");
++    }
++    g_byte_array_unref(raw);
++    return TRUE;
++}
++
+ DBusNeardTag*
+ dbus_neard_tag_new(
+     NfcTag* tag,
+@@ -267,6 +335,10 @@ dbus_neard_tag_new(
+         g_signal_connect(self->iface, "handle-deactivate",
+         G_CALLBACK(dbus_neard_tag_handle_deactivate), self);
+ 
++    self->neard_event_id[NEARD_CALL_WRITE] =
++        g_signal_connect(self->iface, "handle-write",
++        G_CALLBACK(dbus_neard_tag_handle_write), self);
++
+     switch (tag->type) {
+     case NFC_TAG_TYPE_FELICA:
+         protocol = NEARD_PROTOCOL_FELICA;
+@@ -297,7 +369,7 @@ dbus_neard_tag_new(
+         org_neard_tag_set_type_(self->iface, type->name);
+     }
+     org_neard_tag_set_adapter(self->iface, adapter_path);
+-    org_neard_tag_set_read_only(self->iface, TRUE);
++    org_neard_tag_set_read_only(self->iface, !nfc_tag_mfc_can_write(tag));
+     g_dbus_object_manager_server_export(object_manager, object);
+     g_object_unref(object);
+ 
+diff --git a/unit/core_tag_mfc/Makefile b/unit/core_tag_mfc/Makefile
+new file mode 100644
+index 0000000..c9c5cb4
+--- /dev/null
++++ b/unit/core_tag_mfc/Makefile
+@@ -0,0 +1,3 @@
++EXE = test_core_tag_mfc
++COMMON_SRC = test_main.c test_target.c
++include ../common/Makefile
 diff --git a/unit/core_tag_mfc/test_core_tag_mfc.c b/unit/core_tag_mfc/test_core_tag_mfc.c
 new file mode 100644
 index 0000000..02c4b88
@@ -868,12 +894,3 @@ index 0000000..02c4b88
 +    g_test_add_func("/mfc/write-grow-after-terminator",write_padding);
 +    return g_test_run();
 +}
-diff --git a/unit/core_tag_mfc/Makefile b/unit/core_tag_mfc/Makefile
-new file mode 100644
-index 0000000..c9c5cb4
---- /dev/null
-+++ b/unit/core_tag_mfc/Makefile
-@@ -0,0 +1,3 @@
-+EXE = test_core_tag_mfc
-+COMMON_SRC = test_main.c test_target.c
-+include ../common/Makefile

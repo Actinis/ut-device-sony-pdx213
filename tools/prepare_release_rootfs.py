@@ -23,6 +23,17 @@ def main():
         dest=root/'usr/local/lib/utxperia/gnss'/name
         dest.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(a.artifacts/'out/gnss'/name,dest);os.chown(dest,0,0)
+    from build_nfc import ARTIFACTS
+    nfc=root/'usr/local/lib/utxperia/nfc'
+    nfc.mkdir(parents=True,exist_ok=True)
+    for name in ARTIFACTS:
+        dest=nfc/name;shutil.copy2(a.artifacts/'out/nfc'/name,dest);os.chown(dest,0,0)
+    plugins=nfc/'plugins';plugins.mkdir(exist_ok=True)
+    if not (root/'usr/lib/nfcd/plugins/binder.so').exists():raise SystemExit('Missing distribution NFC binder plugin')
+    for src in (root/'usr/lib/nfcd/plugins').iterdir():
+        dest=plugins/src.name;dest.unlink(missing_ok=True)
+        dest.symlink_to('/usr/local/lib/utxperia/nfc/binder.so' if src.name=='binder.so' else '/usr/lib/nfcd/plugins/'+src.name)
+        os.chown(dest,0,0,follow_symlinks=False)
     # Add only documented groups; never copy the test device's passwd/shadow.
     file=root/'etc/group';lines=[]
     additions={'android_graphics':['lightdm'],'video':['lightdm'],'render':['lightdm','phablet'],'android_input':['lightdm']}

@@ -1,0 +1,128 @@
+{
+  "status": "locked inputs for source build; hardware qualification is separate",
+  "sources": [
+    {
+      "component": "hal",
+      "url": "https://github.com/NXPNFCProject/nfcandroid_nfc_hidlimpl.git",
+      "commit": "583f1952fea1cf3a51ee9f609cbe61b2aed4e56c",
+      "patch": "hal.patch",
+      "patch_sha256": "2a9f05d688d68200390b33763c4b6ea5e8b029187f37376e078fda26818353d6"
+    },
+    {
+      "component": "binder-plugin",
+      "url": "https://github.com/mer-hybris/nfcd-binder-plugin.git",
+      "commit": "25a67ba973dc118d14625c2d66f75ca0afaa1bfc",
+      "patch": "binder-plugin.patch",
+      "patch_sha256": "e01ab371dcd164d9e454ff73b9169f03e61019ac9a2848862d93313d7675d339"
+    },
+    {
+      "component": "nci-plugin",
+      "url": "https://github.com/mer-hybris/libnciplugin.git",
+      "commit": "0b543f1aa1f2d88fb14c38c15c8a6beb6ce13b0f",
+      "patch": "nci-plugin.patch",
+      "patch_sha256": "80e9f5261e73a751bed60f2066c27a250a085cc8018f61dc022636c7e60c1ec8"
+    },
+    {
+      "component": "ncicore",
+      "url": "https://github.com/mer-hybris/libncicore.git",
+      "commit": "2e91ac7247dd2dfa6e075f5ac05ef2c7b0b5e356",
+      "patch": "ncicore.patch",
+      "patch_sha256": "5ed5ceedd31a08367ff52010b6a628858f242ab4832c3833ca04be6f9fe343ea"
+    },
+    {
+      "component": "nfcd",
+      "url": "https://github.com/sailfishos/nfcd.git",
+      "commit": "aca4955b895a1eaefae4964ded1e0fcc6ed22eaf",
+      "patch": "nfcd.patch",
+      "patch_sha256": "0937cfc43c6e012c99ce5d9669263d58bfca47598f46534470de7668ccc055d9"
+    },
+    {
+      "component": "ese",
+      "url": "https://android.googlesource.com/platform/hardware/nxp/secure_element",
+      "commit": "8453b0b883bdd62610a16c6638309e3f915ed7b4"
+    },
+    {
+      "component": "ese-nxp",
+      "url": "https://github.com/NXPNFCProject/nfcandroid_se_hidlimpl.git",
+      "commit": "2f57446a10f788585fff13b1fdf9bb0eab94a799"
+    },
+    {
+      "component": "ese-extns",
+      "url": "https://github.com/NXPNFCProject/nfcandroid_nxp_ese_clients.git",
+      "commit": "af72f30e11eac035ec461bf308d61487f1e4f9b0"
+    }
+  ],
+  "development_headers": [
+    {
+      "name": "libgbinder-dev",
+      "version": "1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libgbinder/libgbinder-dev_1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2_arm64.deb",
+      "sha256": "c4deeef7bbd3c92b064f783d4a50b7cac8ad5c313a1385a4c47dfa2a6d7ef759",
+      "filename": "libgbinder-dev_1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libglibutil-dev",
+      "version": "1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libglibutil/libglibutil-dev_1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2_arm64.deb",
+      "sha256": "c599a5846f5206a42568d0d78c601a09adb38f4d4ee4740a44e6a05f84222fbd",
+      "filename": "libglibutil-dev_1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libncicore-dev",
+      "version": "1.1.32-0ubports1~20260529000806.5~584f994+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libncicore/libncicore-dev_1.1.32-0ubports1~20260529000806.5~584f994+ubports24.04.2_arm64.deb",
+      "sha256": "9378b56c4db5f2a4ffdc320d0ac4d762f2ba66b91eca4c67591d3dee005e8e88",
+      "filename": "libncicore-dev_1.1.32-0ubports1~20260529000806.5~584f994+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libnciplugin-dev",
+      "version": "1.2.2-0ubports1~20260414043901.6~f398ddb+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libnciplugin/libnciplugin-dev_1.2.2-0ubports1~20260414043901.6~f398ddb+ubports24.04.2_arm64.deb",
+      "sha256": "620fa0d633642813b033e26b9ce80dbb9d2fa94f7c6dabc174f8e91568e3b00b",
+      "filename": "libnciplugin-dev_1.2.2-0ubports1~20260414043901.6~f398ddb+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libnfcd-dev",
+      "version": "1.2.6-0ubports1~20260529000936.8~86b1be1+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/n/nfcd/libnfcd-dev_1.2.6-0ubports1~20260529000936.8~86b1be1+ubports24.04.2_arm64.deb",
+      "sha256": "2d27d08b40f0396911420bb8ddf63abb0911540f6625e346fc62af36b126c1c5",
+      "filename": "libnfcd-dev_1.2.6-0ubports1~20260529000936.8~86b1be1+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libnfcdef-dev",
+      "version": "1.1.0-0ubports1~20260413221115.2~36ef464+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libn/libnfcdef/libnfcdef-dev_1.1.0-0ubports1~20260413221115.2~36ef464+ubports24.04.2_arm64.deb",
+      "sha256": "f953ae7d64fcfd0a38d9d9a50583524fa30fe16178e0e31cd2d4eee7e7fccf58",
+      "filename": "libnfcdef-dev_1.1.0-0ubports1~20260413221115.2~36ef464+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libc6-dev",
+      "version": "2.39-0ubuntu8",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/libc6-dev_2.39-0ubuntu8_arm64.deb",
+      "sha256": "cf8d2af040044ea5f9205a7a7a3eceabe9bc182fd780a1dac8e849f8eccee1f1",
+      "filename": "libc6-dev_2.39-0ubuntu8_arm64.deb"
+    },
+    {
+      "name": "libglib2.0-dev",
+      "version": "2.80.0-6ubuntu1",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glib2.0/libglib2.0-dev_2.80.0-6ubuntu1_arm64.deb",
+      "sha256": "232ce9efbecefbf80f464ae352f89f3b75f867ff6bfc38ea834b1ade9a50b580",
+      "filename": "libglib2.0-dev_2.80.0-6ubuntu1_arm64.deb"
+    },
+    {
+      "name": "linux-libc-dev",
+      "version": "6.8.0-31.31",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-libc-dev_6.8.0-31.31_arm64.deb",
+      "sha256": "7fd438efa44a794b438e7dde7ac280166fb8d4b1cf7846393ce019714d8bb3e3",
+      "filename": "linux-libc-dev_6.8.0-31.31_arm64.deb"
+    },
+    {
+      "name": "libglib2.0-dev-bin",
+      "version": "2.80.0-6ubuntu1",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glib2.0/libglib2.0-dev-bin_2.80.0-6ubuntu1_arm64.deb",
+      "sha256": "df302fb855741027ef342567c0752a92ad41bcbdd2450d867ca1d7d04472c1f8",
+      "filename": "libglib2.0-dev-bin_2.80.0-6ubuntu1_arm64.deb"
+    }
+  ],
+  "schema_version": 1
+}
