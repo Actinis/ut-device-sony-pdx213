@@ -67,5 +67,20 @@ jobs:
             --mkbootimg-source "$GITHUB_WORKSPACE/mkbootimg" \
             --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
             --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs
+      - name: Archive kernel and boot build results
+        run: |
+          build="$UT_PORTS_DATA_DIR/builds/pdx213/ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          tar -C "$build" -czf "$build/pdx213-noble-kernel-boot.tar.gz" out input-identity.json
+      - name: Save kernel and boot build results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pdx213-noble-kernel-boot-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.UT_PORTS_DATA_DIR }}/builds/pdx213/ci-${{ github.run_id }}-${{ github.run_attempt }}/pdx213-noble-kernel-boot.tar.gz
+            ${{ env.UT_PORTS_DATA_DIR }}/builds/pdx213/ci-${{ github.run_id }}-${{ github.run_attempt }}/out/build-report.json
+            ${{ env.UT_PORTS_DATA_DIR }}/builds/pdx213/ci-${{ github.run_id }}-${{ github.run_attempt }}/input-identity.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
       - name: Explain qualification boundary
         run: echo 'Kernel and boot built. No vendor/OEM, userdata, phone qualification, flash, OTA or release publication was performed.'

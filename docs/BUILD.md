@@ -32,6 +32,11 @@ creates the release boot image; and executes its BusyBox shell under QEMU.
 build, not full userdata assembly or hardware qualification. AppArmor and PMF
 fixes are in-tree; do not run an apply-backport script.
 
+CI retains kernel/boot build results for 30 days as a GitHub Actions artifact,
+including boot, DTBO, Image.gz-dtb, modules, helpers, build-report and input
+identity. The tar archive preserves executable modes. These are experimental
+build outputs, not an installation release; vendor/OEM and userdata are excluded.
+
 ## Local development userdata assembly
 
 After resolving the manual vendor input, use its explicit file path:
