@@ -17,5 +17,5 @@ Seven fake-HAL tests cover transitions, recovery, external changes, failed
 writes and unsupported responses: python3 tools/test_call_audio.py.
 On the XQ-BT52 prototype, calls and SMS worked in both directions. Bidirectional
 audio through the earpiece and speakerphone was confirmed after reboot, and the
-original dualmic route returned after hangup. Mobile data, VoLTE, SIM2 and
+original dualmic route returned after hangup. VoLTE, SIM2 and
 Bluetooth HFP remain unqualified. See HARDWARE.md.
