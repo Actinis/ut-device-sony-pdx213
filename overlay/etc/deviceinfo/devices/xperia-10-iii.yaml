@@ -24,3 +24,4 @@ pdx213:
   FlashlightBackend: sysfs
   FlashlightSysfsPath: /sys/class/leds/led:torch_0/brightness
   FlashlightSwitchPath: /sys/class/leds/led:switch_0/brightness
+  DoubleTapToWake: "/sys/module/sec_touchscreen/parameters/double_tap_to_wake|Y|N"

@@ -7,7 +7,7 @@
     "kernel": {
       "kind": "git",
       "url": "https://github.com/Actinis/ut-kernel-sony-msm.git",
-      "commit": "a7f1fc6538c2756cc2d7b08aeb0586dd4e7c2718",
+      "commit": "631cc0b5c651bbb4db906f2f865fd42e24c83ac6",
       "branch": "main",
       "submodules": {
         "drivers/staging/wlan-qc/fw-api": {
@@ -105,7 +105,7 @@
       "kind": "derived",
       "dependencies": [],
       "files": {
-        "device/boot-metadata.json": "1502074e63aa9fb5dad5a88b40c27b0c8769e2ce394d4878806a971bb78bab01"
+        "device/boot-metadata.json": "6efef28d828930b7ef3e31ebbe81a1ce0b7337e9bf754769bd1e2adf3f0321d1"
       },
       "description": "Fixed Sony v0 boot header and cmdline; not copied from private boot backup"
     },

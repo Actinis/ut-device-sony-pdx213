@@ -6,6 +6,6 @@
   "ramdisk_offset": "0x02000000",
   "second_offset": "0x00f00000",
   "tags_offset": "0x01e00000",
-  "cmdline": "lpm_levels.sleep_disabled=1 androidboot.bootdevice=1d84000.ufshc swiotlb=2048 service_locator.enable=1 androidboot.selinux=permissive androidboot.memcg=1 msm_rtb.filter=0x3F ehci-hcd.park=3 coherent_pool=8M sched_enable_power_aware=1 user_debug=31 printk.devkmsg=on loop.max_part=16 kpti=0 androidboot.hardware=pdx213 androidboot.fstab_suffix=pdx213 audit=1 apparmor=1 security=apparmor utxperia.port=1",
+  "cmdline": "lpm_levels.sleep_disabled=1 androidboot.bootdevice=1d84000.ufshc swiotlb=2048 service_locator.enable=1 androidboot.selinux=permissive androidboot.memcg=1 msm_rtb.filter=0x3F ehci-hcd.park=3 coherent_pool=8M sched_enable_power_aware=1 user_debug=31 printk.devkmsg=on loop.max_part=16 kpti=0 androidboot.hardware=pdx213 androidboot.fstab_suffix=pdx213 audit=1 apparmor=1 security=apparmor utxperia.port=1 sec_touchscreen.double_tap_to_wake=1",
   "source": "Sony pdx213 fixed boot parameters used by the qualified release builder; no device boot backup"
 }

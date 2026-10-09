@@ -6,6 +6,7 @@ Results are from the working XQ-BT52 prototype, not from a newly flashed source-
 | Component | Result and evidence |
 | --- | --- |
 | Display / GPU / touch | Accelerated Lomiri, Adreno 619, 1080×2520; Settings/browser/OpenStore and touch calculation captured in `evidence/`. |
+| Double-tap wake | Physical double taps woke the screen on XQ-BT52; spaced single taps did not. Confirmed again after reboot on the final kernel. Repowerd enable/disable and five screen-off/on cycles passed. Deep suspend, pocket rejection, battery impact and long-duration use remain unqualified. See [touch wake control](TOUCH.md). |
 | Wi-Fi station | WPA2/CCMP 2.4 GHz association, DHCP, HTTPS and screen-off/on passed. The kernel repairs Sony cfg80211's IGTK index-validation regression. The saved 5 GHz network automatically connected using WPA3/SAE with PMF and BIP; three reconnects with PMF required and HTTPS through wlan0 passed without password prompts. Automatic PMF policy is enabled. See WIFI.md. Long-duration use and other routers/cipher suites remain unqualified. |
 | Wi-Fi hotspot | Real host client on 2.4 GHz and 5 GHz channel 36 (5180 MHz), DHCP and 3/3 successful pings in each test. Mobile-data upstream through the hotspot remains untested. |
 | Speaker / microphones | Generated 1 kHz tone played through phone speaker and recorded by both microphone routes. Peak tone amplitudes ~3025 and ~463 vs low background. Raw recordings deleted; metrics retained. |

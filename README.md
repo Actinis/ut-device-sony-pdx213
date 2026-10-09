@@ -33,3 +33,5 @@ GNSS assistance, privacy and current qualification limits: [GNSS](docs/GNSS.md).
 
 NFC build inputs, supported operations and explicit qualification gaps:
 [NFC](device/nfc/README.md).
+
+Double-tap wake control and qualification: [touch wake](docs/TOUCH.md).
