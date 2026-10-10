@@ -75,9 +75,14 @@ stop passed with 14.77 seconds of H264 1280x720 video and stereo AAC; both strea
 fully decoded. Main-camera 4000x3000 and front-camera 3264x2448 JPEGs also fully
 decoded in separate sequential native processes. SensorFW returned samples from
 accelerometer, gyroscope, magnetometer, light, proximity, rotation and compass.
-These results do not qualify the stock Camera application, same-process switching,
-sensor accuracy, calls, GNSS, NFC, Bluetooth or suspend on this candidate. Repeated
-reboot and long-duration qualification remain pending. See
+On a freshly installed CI-based userdata with separately acquired Sony v9a OEM,
+a reversible source-vendor substitution also passed the stock Camera scenario:
+video/stop, main photo, same-process front-camera switch and front photo. Both
+JPEGs and the video/audio streams fully decoded. A subsequent normal reboot
+returned to the shell, core services and automatically connected Wi-Fi. This
+is not a complete source-vendor userdata flash or stock-restoration test. Sensor
+accuracy, calls, GNSS, NFC, Bluetooth, suspend and long-duration qualification
+remain pending. The qualified manual vendor was restored after testing. See
 [device evidence](../evidence/vendor-device-candidate.json).
 
 Read-only comparison found all qualified vendor paths present, 285 file-content
@@ -90,13 +95,23 @@ artifact; public Git hosting alone is not recorded as distribution approval.
 An English [licence clarification request](https://github.com/sonyxperiadev/device-sony-pdx213/issues/10)
 is open with Sony. No permission to redistribute is inferred from filing it.
 
-The generated per-installed-file NOTICE mapping covers only 88 of 915 installed
-vendor files. The other 827 are not automatically considered unlicensed: many
+The installed inventory contains 684 regular files and 231 symlinks. The
+generated per-installed-path NOTICE mapping covers 88 of these 915 entries. The
+other 827 are not automatically considered unlicensed: many
 are compiled from public source with licence files elsewhere. The complete
 module-to-source/licence review remains required; resolving the nine calibration
 files alone is not recorded as approval for the entire image.
 
+A read-only Ninja/Soong audit found source dependencies for 852 installed paths
+and project-root notice/licence pointers across 139 source projects. Direct
+source inputs detected as ELF or calibration/firmware data were the nine Sony
+calibration files. This partial trace leaves generated/intermediate dependencies
+unresolved and is not an exhaustive licence classifier. See the
+[sanitized audit summary](../evidence/vendor-origin-audit.json).
+
 The qualified manual vendor remains the packaging input. The source candidate
 has not replaced it as a packaging input or been uploaded as a public binary.
-Runtime testing uses a reversible vendor-image substitution; the existing boot
-and userdata baseline is not a clean installation qualification.
+Source-vendor runtime testing uses reversible image substitution. The CI-based
+userdata clean-install result with manual vendor is recorded separately in
+[installation qualification](INSTALLATION-QUALIFICATION.md); it does not qualify
+full source-vendor installation or redistribution.

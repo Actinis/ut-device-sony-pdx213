@@ -17,7 +17,6 @@
     "Repeated reboot and long-duration qualification remain incomplete"
   ],
   "not_confirmed": [
-    "Stock camera application recording and same-process camera switching; native camera tests used separate sequential processes",
     "Sensor accuracy, physical proximity transitions and step-count response; orientation and step-counter streams produced no new samples in the stationary test; pressure channel unavailable",
     "Candidate-specific GNSS, NFC, Bluetooth, calls and suspend",
     "Clean stock-baseline installation and recovery",
@@ -25,5 +24,57 @@
   ],
   "privacy": "No images, audio, device identifiers, coordinates, private core dumps or raw logs included",
   "camera_device_commit": "f4e7e17363c14126a8bd80e80153691f0434aa65",
-  "camera_library_sha256": "26634860e46455e3bafef36205bcadc4ebb16f0b7f62235a6615cde26268607a"
+  "camera_library_sha256": "26634860e46455e3bafef36205bcadc4ebb16f0b7f62235a6615cde26268607a",
+  "fresh_system_test": {
+    "baseline": "Full local userdata assembled from exact CI run 38079924323, erased and flashed with locked manual vendor; source vendor then substituted reversibly after setup. Not a full source-vendor userdata flash or stock-restoration test.",
+    "device_commit": "f4e7e17363c14126a8bd80e80153691f0434aa65",
+    "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38079924323",
+    "oem": "Independently downloaded official Sony v9a Lena",
+    "camera": {
+      "jpeg_dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          2688,
+          1512
+        ]
+      ],
+      "videos": [
+        {
+          "duration_seconds": 14.549333,
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1080,
+              "height": 1080,
+              "sample_rate": null,
+              "channels": null
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "width": null,
+              "height": null,
+              "sample_rate": "48000",
+              "channels": 2
+            }
+          ],
+          "full_decode_passed": true
+        }
+      ]
+    },
+    "passed": [
+      "Source vendor SHA256 matched before and after reboot",
+      "Normal shell, oFono, NetworkManager and automatic Wi-Fi reconnection",
+      "Stock Camera recorded and stopped video, captured main-camera photo, switched to front camera in the same process and saved front photo",
+      "Both JPEGs and full video/audio streams decoded privately",
+      "One subsequent systemd reboot returned to active core services and connected Wi-Fi",
+      "First source-vendor session stayed up for more than seven minutes"
+    ],
+    "diagnostic_scope": "Private USB key-only SSH in writable overlay; absent from image inputs",
+    "final_state": "Qualified manual vendor restored by checksum-guarded file substitution; source image retained locally"
+  }
 }

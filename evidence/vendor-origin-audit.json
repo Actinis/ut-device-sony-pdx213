@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only build provenance and license-file pointers; not redistribution approval or complete transitive license analysis",
+  "vendor_sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
+  "vendor_build_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
+  "full_local_report_sha256": "7057504c0963a7f53b51d12b394509ffe46082589151973eab692d8601b463be",
+  "summary": {
+    "installed_entries": 915,
+    "regular_files": 684,
+    "symlinks": 231,
+    "direct_binary_input_entries": 9,
+    "files_with_source_origins": 852,
+    "files_with_generated_notices": 88,
+    "files_with_unresolved_build_inputs": 605,
+    "source_projects": 139
+  },
+  "root_notice_or_license_pointers": 126,
+  "direct_binary_detection": "ELF magic or selected calibration/firmware suffixes on direct source inputs; not an exhaustive licence classifier",
+  "direct_binary_inputs": [
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Bluetooth_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/General_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Global_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Handset_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Hdmi_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Headset_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/Speaker_cal.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/adsp_avs_config.acdb",
+    "device/sony/pdx213/rootdir/vendor/etc/acdbdata/workspaceFile.qwsp"
+  ],
+  "limitations": [
+    "Ninja dependency tracing includes build-time and transitive dependencies; it is not a definitive runtime attribution list",
+    "Source origins and project-root licence pointers do not establish redistribution rights",
+    "605 installed entries have unresolved generated/intermediate build inputs in this partial trace",
+    "Generated files, symlinks, per-file headers and nested licence files require separate review"
+  ],
+  "sony_licence_request": "https://github.com/sonyxperiadev/device-sony-pdx213/issues/10",
+  "redistribution_approved": false
+}
