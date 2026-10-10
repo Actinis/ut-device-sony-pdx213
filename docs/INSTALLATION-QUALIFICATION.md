@@ -46,9 +46,9 @@ repeated on this exact candidate.
 
 Mobile data and both network-switching directions were qualified with the same
 source-vendor input on device commit `e0a334d` (exact scope in the evidence).
-The final candidate has no SIM, so mobile startup after reboot with Wi-Fi disabled
-and repeated mobile switching remain unqualified here. IPv6 has not been
-qualified on a usable IPv6 network.
+The user confirms SIM operation and accepts this qualification scope. This is
+user evidence, not an additional automated mobile startup measurement on the
+exact final CI candidate. IPv6 has not been qualified on a usable IPv6 network.
 
 Speaker test tones were detected by both microphones. Accelerometer, gyroscope,
 magnetometer, ambient-light, proximity, rotation and compass produced streams;

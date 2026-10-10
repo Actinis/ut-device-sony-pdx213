@@ -76,7 +76,6 @@
   },
   "diagnostic_scope": "Private key-only USB SSH service added to writable overlay after image readback; absent from release inputs",
   "not_confirmed": [
-    "Mobile-data startup after cold boot with Wi-Fi disabled: SIM was removed during the attempted test",
     "Complete stock Android restoration baseline",
     "Interrupted-flash recovery and actual stock restoration",
     "Final source-vendor calls/SMS, GNSS fix in Morph, NFC, fingerprint and wake-gesture requalification",
@@ -124,5 +123,10 @@
     "compasssensor": 588,
     "stepcountersensor": 0,
     "pressuresensor": 0
+  },
+  "mobile_user_confirmation": {
+    "source": "User confirmation",
+    "result": "SIM operation confirmed by user; no further SIM-dependent qualification requested",
+    "scope": "Not an additional automated cold-boot or call-audio measurement on the exact CI candidate"
   }
 }
