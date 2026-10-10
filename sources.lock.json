@@ -7,7 +7,7 @@
     "kernel": {
       "kind": "git",
       "url": "https://github.com/Actinis/ut-kernel-sony-msm.git",
-      "commit": "02f0d3b444c171ecec8c5f61c5d0fc8eae22b0d6",
+      "commit": "6a997dbc28049329189dad6a09f4f3c0cb16e52e",
       "branch": "main",
       "submodules": {
         "drivers/staging/wlan-qc/fw-api": {
