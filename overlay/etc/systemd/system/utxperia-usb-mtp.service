@@ -1,11 +1,10 @@
 [Unit]
 Description=Add MTP to the Xperia USB network gadget
 Requires=lxc-android-config.service
-After=lxc-android-config.service lightdm.service utxperia-usb-internet.service
+After=lxc-android-config.service lightdm.service
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/utxperia-usb-mtp
-ExecStartPost=/usr/bin/systemctl restart utxperia-usb-internet.service
 ExecStartPost=/usr/sbin/runuser -u phablet -- /usr/bin/env XDG_RUNTIME_DIR=/run/user/32011 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/32011/bus /usr/bin/systemctl --user restart mtp-server.service
 RemainAfterExit=yes

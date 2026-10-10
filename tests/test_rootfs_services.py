@@ -26,4 +26,10 @@ class RootfsServiceTests(unittest.TestCase):
             self.assertTrue((wants/'utxperia-wlan.service').is_symlink())
             self.assertTrue((units/'utxperia-usb-internet.service').is_file())
 
+    def test_mtp_does_not_start_a_development_gateway(self):
+        root=Path(__file__).resolve().parents[1]
+        unit=(root/'overlay/etc/systemd/system/utxperia-usb-mtp.service').read_text()
+        self.assertNotIn('utxperia-usb-internet.service',unit)
+        self.assertIn('mtp-server.service',unit)
+
 if __name__=='__main__':unittest.main()
