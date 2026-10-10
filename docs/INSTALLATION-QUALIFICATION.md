@@ -22,7 +22,7 @@ apply `fastboot -w` after installing the populated userdata image.
 
 Before first installable release:
 
-- Resolve vendor source rebuild/distribution and independently acquired Sony OEM.
+- Resolve vendor source rebuild/distribution and qualify flashing of the independently acquired Sony OEM (acquisition/file equivalence verified; see OEM.md).
 - Qualify installation after a documented complete stock Android restoration.
 - Test the exact source-import build, first setup, repeated cold boots and slot success.
 - Verify recovery after interrupted flashing and restoration to stock firmware.

@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "device": "sony-pdx213",
   "ubuntu_touch": "24.04",
   "status": "locked",
@@ -95,11 +95,18 @@
       "kind": "manual",
       "url": "https://opendevices.sony.net/file/download/software-binaries-for-aosp-android-11-0-kernel-4-19-lena",
       "version": "SW_binaries_for_Xperia_Android_11_4.19_v9a_lena.zip",
-      "sha256": "cff5ba3fc138e08ba170595fe85b9812735929642eb6c04761538328f7b843dc",
-      "bytes": 838860800,
-      "filename": "sony-oem.img",
-      "redistribution": "Excluded; obtain directly from Sony under their EULA",
-      "acquisition": "Qualified hash is the ext4 OEM partition image from the prototype, not a verified hash of the public ZIP. Independently obtained ZIP/image equivalence remains to be qualified; do not force pad/convert merely to match this hash."
+      "sha256": "fc33d87874d562957302bf4ce0c21a9d752dcc7c62de49bf63502337ed2bc0ff",
+      "bytes": 351883808,
+      "filename": "SW_binaries_for_Xperia_Android_11_4.19_v9a_lena.img",
+      "redistribution": "Excluded from Git, CI and release bundles; each user obtains directly from Sony under its EULA",
+      "acquisition": "Obtain the v9a Lena ZIP directly from the official Sony page after accepting its EULA. Verify archive and extracted sparse image using tools/verify_sony_oem.py. Downloaded file contents, modes, ownership and xattrs match the prototype OEM; independent flashing remains unqualified.",
+      "format": "android-sparse",
+      "decoded_sha256": "98e658672719dce7366594f88ff6919c8b3fd0771d82c4ea6db4c18004744a21",
+      "decoded_bytes": 838860800,
+      "archive": {
+        "filename": "SW_binaries_for_Xperia_Android_11_4.19_v9a_lena.zip",
+        "sha256": "ccf46bacb021abd63e02c471aa07ef0a6e5c0bb09b04b40e092611cf5aac098b"
+      }
     },
     "boot_metadata": {
       "kind": "derived",
@@ -606,6 +613,32 @@
         "device/repowerd/core-tests.cmake": "4a2310ec8a0866ab19f38dd84922d75f2d7e3ec9f1aab93ad22310c9373c9fb0",
         "device/repowerd/inputs.json": "cf9fe051c5eacd3ad609b45395360cf105190e6652d7da54e4e93ecf7c83b056",
         "device/repowerd/raise-to-wake.patch": "3878b86b43e524bb67fd4f0fd79f7ef1f7e51d1e9092711ac78e35d3ed50f6c8"
+      }
+    },
+    "repo_tool": {
+      "kind": "git",
+      "url": "https://gerrit.googlesource.com/git-repo",
+      "commit": "b5991d71283c0c3a5d31e371d34c4d976bde63fd"
+    },
+    "avbtool": {
+      "kind": "artifact",
+      "url": "https://android.googlesource.com/platform/external/avb/+/386fb90492db3bd6bc484a579bcde5b43a2a0292/avbtool.py?format=TEXT",
+      "version": "AOSP avbtool Android 14 386fb90492db3bd6bc484a579bcde5b43a2a0292",
+      "filename": "avbtool.py.base64",
+      "sha256": "fe6c6c1687eccfe1d93c99a47108ca5515e5ea4817dbeb88d726845b5cc8886a",
+      "encoding": "base64",
+      "decoded_sha256": "1f1fddd2764eba76dc659415406062251edcf2eb6b4e83b0f01d0224cd631281"
+    },
+    "vendor_recipe": {
+      "kind": "derived",
+      "dependencies": [
+        "repo_tool"
+      ],
+      "description": "Independent Android 11 vendor candidate from exact AOSP/Sony manifest and 17 pinned Android patches; candidate must be qualified before replacing manual vendor input",
+      "files": {
+        "device/vendor/Dockerfile": "5afcbcb931c9ba8eb78f326d206eb6ddad8c39ffdbb1d9b036e16ab185cfbf33",
+        "device/vendor/manifest.xml": "a8920fe5ac3c7ef07c31d844293e36ad9c049cb405f222d2918ce8940a8eb6ae",
+        "tools/build_vendor.py": "8e5cf0c379208e55c43c64fc859aaa9aa232c269309ad83ce238f1fe11be5496"
       }
     }
   },

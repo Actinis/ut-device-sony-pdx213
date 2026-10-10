@@ -1,0 +1,3 @@
+self-hosted-runner:
+  labels:
+    - ut-pdx213-vendor

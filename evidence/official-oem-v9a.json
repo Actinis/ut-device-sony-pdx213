@@ -1,0 +1,14 @@
+{
+  "scope": "local official acquisition and logical filesystem comparison; no phone flash",
+  "file_entry_count": 960,
+  "file_differences": 0,
+  "metadata_entries": [
+    960,
+    960
+  ],
+  "metadata_differences": 0,
+  "archive_sha256": "ccf46bacb021abd63e02c471aa07ef0a6e5c0bb09b04b40e092611cf5aac098b",
+  "sparse_sha256": "fc33d87874d562957302bf4ce0c21a9d752dcc7c62de49bf63502337ed2bc0ff",
+  "raw_sha256": "98e658672719dce7366594f88ff6919c8b3fd0771d82c4ea6db4c18004744a21",
+  "images_redistributed": false
+}

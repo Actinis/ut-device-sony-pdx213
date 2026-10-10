@@ -11,8 +11,8 @@ def validate(data, repository=None):
     need(data.get('status') == 'locked', 'Sources are not locked')
     sources=data.get('sources',{})
     schema=data.get('schema_version')
-    need(schema in (1,2,3,4,5),'Unknown lock schema')
-    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
+    need(schema in (1,2,3,4,5,6),'Unknown lock schema')
+    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool'} if schema==6 else REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
     for name, entry in sources.items():
         kind=entry.get('kind') if schema>=2 else 'git' if name=='kernel' else 'artifact'
         need(kind in ('git','artifact','manual','derived'),'Unknown source kind')
@@ -76,6 +76,26 @@ def validate(data, repository=None):
             tracked={p.relative_to(repository).as_posix() for p in base.rglob('*') if p.is_file()}
             need(tracked==set(entry['files']),'Unpinned or stale Repowerd source inventory')
             validate_repowerd_inputs(json.loads((base/'inputs.json').read_text()),base)
+    if schema >= 6:
+        entry=sources['vendor_recipe']
+        need(entry.get('kind')=='derived' and set(entry.get('dependencies',[]))=={'repo_tool'},'Invalid vendor recipe dependencies')
+        need(bool(entry.get('files')),'Missing vendor recipe inventory')
+        if repository:
+            import json
+            import sys
+            sys.path.insert(0,str(Path(repository)/'tools'))
+            from build_vendor import projects
+            projects(Path(repository)/'device/vendor/manifest.xml')
+            expected={str(p.relative_to(repository)) for p in (Path(repository)/'device/vendor').rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+            expected.add('tools/build_vendor.py')
+            need(set(entry['files'])==expected,'Incomplete vendor recipe file inventory')
+        oem=sources['sony_oem']
+        archive=oem.get('archive',{})
+        need(oem.get('kind')=='manual' and oem.get('format')=='android-sparse','OEM must remain a manual sparse image')
+        need(bool(re.fullmatch('[0-9a-f]{64}',oem.get('decoded_sha256',''))) and isinstance(oem.get('decoded_bytes'),int) and oem['decoded_bytes']>0,'Missing OEM decoded image identity')
+        name=archive.get('filename','')
+        need(name and Path(name).name==name and name not in ('.','..') and bool(re.fullmatch('[0-9a-f]{64}',archive.get('sha256',''))),'Missing OEM archive identity')
+        need(sources['avbtool'].get('kind')=='artifact' and sources['avbtool'].get('encoding')=='base64' and bool(re.fullmatch('[0-9a-f]{64}',sources['avbtool'].get('decoded_sha256',''))),'AVB utility must be checksum-pinned before and after decoding')
     return data
 
 

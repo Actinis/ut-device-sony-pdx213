@@ -1,0 +1,60 @@
+name: Android vendor source candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  vendor:
+    # Dedicated, trusted runner: Android source builds need substantially more disk.
+    runs-on: [self-hosted, linux, x64, ut-pdx213-vendor]
+    timeout-minutes: 360
+    env:
+      UT_PORTS_DATA_DIR: ${{ vars.UT_VENDOR_DATA_DIR }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate inputs and prepare dedicated work directory
+        run: |
+          python3 ci/check_repository.py
+          test -n "$UT_PORTS_DATA_DIR"
+          build="$UT_PORTS_DATA_DIR/builds/pdx213/vendor-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$build"
+          echo "VENDOR_BUILD_DIR=$build" >> "$GITHUB_ENV"
+          python3 - <<'PYTHON'
+          import json, os, shutil, subprocess
+          from pathlib import Path
+          root=Path(os.environ['UT_PORTS_DATA_DIR'])
+          assert shutil.disk_usage(root).free >= 300*1024**3, 'Vendor runner needs 300 GiB free'
+          entry=json.loads(Path('sources.lock.json').read_text())['sources']['repo_tool']
+          tool=root/'toolchains/git-repo'/entry['commit']
+          if not tool.exists():
+              subprocess.run(['git','clone','--no-checkout',entry['url'],str(tool)],check=True)
+              subprocess.run(['git','-C',str(tool),'checkout','--detach',entry['commit']],check=True)
+          assert subprocess.check_output(['git','-C',str(tool),'rev-parse','HEAD'],text=True).strip()==entry['commit']
+          assert not subprocess.check_output(['git','-C',str(tool),'status','--porcelain'],text=True).strip()
+          with open(os.environ['GITHUB_ENV'],'a') as output:
+              output.write(f'REPO_LAUNCHER={tool}/repo\n')
+          PYTHON
+      - name: Sync and verify pinned Android sources
+        run: |
+          python3 tools/build_vendor.py --sync --prepare-only --repo-launcher "$REPO_LAUNCHER" \
+            --android-source "$VENDOR_BUILD_DIR/android" --output "$VENDOR_BUILD_DIR/output" --jobs 8
+      - name: Compile vendor candidate without OEM or phone input
+        run: |
+          docker build --build-arg BUILD_UID="$(id -u)" --build-arg BUILD_GID="$(id -g)" -t "ut-pdx213-vendor:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" device/vendor
+          image=$(docker image inspect "ut-pdx213-vendor:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --format '{{.Id}}')
+          python3 tools/build_vendor.py --android-source "$VENDOR_BUILD_DIR/android" \
+            --output "$VENDOR_BUILD_DIR/output" --container-engine /usr/bin/docker --container-image "$image" --jobs 8
+      - name: Retain source-build evidence only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: vendor-source-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.VENDOR_BUILD_DIR }}/output/vendor-build-report.json
+            ${{ env.VENDOR_BUILD_DIR }}/output/prepared.json
+            ${{ env.VENDOR_BUILD_DIR }}/output/host-packages.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: State candidate boundary
+        run: echo 'Vendor bytes remain on the dedicated runner until licence inventory and device qualification permit promotion. No firmware/OEM/phone flash or public binary upload.'

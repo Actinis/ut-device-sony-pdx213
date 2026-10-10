@@ -41,7 +41,8 @@ fixes are in-tree; do not run an apply-backport script.
 CI retains kernel/boot build results for 30 days as a GitHub Actions artifact,
 including boot, DTBO, Image.gz-dtb, modules, helpers, GNSS/NFC libraries and Repowerd, build-report and input
 identity. The tar archive preserves executable modes. These are experimental
-build outputs, not an installation release; vendor/OEM and userdata are excluded.
+build outputs, not an installation release. The separate full-candidate stage
+is conditional on reviewed vendor inputs; OEM is always excluded.
 
 ## Local development userdata assembly
 
@@ -72,8 +73,8 @@ observed large FILL write failure. OEM is excluded. A version-checked CamX guard
 is applied in RAM at runtime; immutable Sony images are not rewritten.
 
 The current scripts assemble local experimental images only. Do not regard a
-build as installation, restoration or redistribution qualification. There is
-no automatic release publication, tag creation, flashing or OTA.
+build as installation, restoration or redistribution qualification. Kernel/boot development publication is automatic as described in RELEASING.md.
+Full installation qualification, flashing and OTA remain outside this builder.
 
 NFC dependencies, runtime layout and hardware evidence are documented in
 [device/nfc/README.md](../device/nfc/README.md). The six NFC binaries and their
@@ -91,3 +92,12 @@ through the clean-rootfs packager. `out/repowerd/repowerd` and its input/output
 report are mandatory; the CI archive also retains its core-test log. Host builds
 require CMake, pkg-config, GoogleTest and GoogleMock in addition to the existing
 dependencies. The full CI installs these dependencies explicitly.
+
+## Full CI candidate
+
+When the locked vendor is a reviewed public artifact with explicit
+`redistribution_approved: true`, CI invokes `prepare_ci_userdata.py` after the
+normal build and saves `pdx213-noble-full-candidate.tar.gz`. It contains boot,
+DTBO, userdata, vbmeta and assembly/build/source metadata. Sony OEM is never
+bundled. The current manual vendor disables this stage; see [VENDOR.md](VENDOR.md)
+for its independent source-build recipe and promotion gates.

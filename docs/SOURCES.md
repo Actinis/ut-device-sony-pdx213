@@ -1,6 +1,6 @@
 # Locked inputs and build scope
 
-Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 5 is
+Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 6 is
 validated by `tools/sources_lock.py`, CI, the build and release metadata tool.
 `locked` means that the listed input identities are pinned, not that all inputs
 are downloadable or a complete installation has been reproduced.
@@ -34,8 +34,10 @@ complete the source or redistribution audit.
 
 Sony Android 11 / 4.19 / v9a Lena OEM is obtained by the user directly from
 Sony under its EULA. It is never included in Git or automatic CI. The lock
-records the qualified prototype's OEM ext4-image hash, not the public ZIP's
-hash. Equivalence of an independently downloaded Sony image remains unqualified.
+records the independently downloaded official ZIP, sparse image and decoded
+raw image hashes. File contents and filesystem metadata match the qualified
+prototype; flashing the independently downloaded image remains unqualified.
+See [OEM.md](OEM.md).
 A complete image release is gated on resolving these inputs and their licences.
 
 Host utilities also affect byte-level image reproducibility: GNU make, tar,
@@ -81,3 +83,12 @@ ARM64 development-package inventory. Validation rejects missing, duplicate,
 unsafe or unhashed inputs. The independent sysroot is rebuilt from these
 packages and locked rootfs libraries; no NFC work directory is reused.
 See [Raise to wake](../device/repowerd/README.md) for runtime integration and gaps.
+
+## Vendor recipe and packaging utility
+
+Schema 6 additionally pins `vendor_recipe`, the exact `repo_tool` implementation,
+and the Python 3 AOSP `avbtool` artifact. The vendor recipe inventory includes
+its manifest, container recipe and builder. The AVB utility is checked both as
+its upstream base64 transport and decoded executable. See [VENDOR.md](VENDOR.md).
+The current manual vendor remains the only qualified packaging input; the new
+source recipe does not silently replace its hash or authorize redistribution.

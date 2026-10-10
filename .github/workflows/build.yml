@@ -40,6 +40,7 @@ jobs:
           from pathlib import Path
           sources = json.loads(Path('sources.lock.json').read_text())['sources']
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"full_image={'true' if sources['vendor'].get('kind') == 'artifact' and sources['vendor'].get('redistribution_approved') is True else 'false'}\n")
               for key in ['kernel', 'mkbootimg']:
                   output.write(f"{key}={sources[key]['commit']}\n")
           PYTHON
@@ -59,7 +60,7 @@ jobs:
       - name: Install host build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc qemu-user unzip kmod e2fsprogs zstd pkg-config python3 cmake libgtest-dev libgmock-dev
+          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc qemu-user unzip kmod e2fsprogs zstd pkg-config python3 cmake libgtest-dev libgmock-dev fakeroot squashfs-tools android-sdk-libsparse-utils
       - name: Verify and extract the locked NDK
         run: |
           python3 - <<'PYTHON'
@@ -82,6 +83,20 @@ jobs:
             --mkbootimg-source "$GITHUB_WORKSPACE/mkbootimg" \
             --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
             --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs --debugfs /usr/sbin/debugfs
+      - name: Assemble reviewed full userdata candidate
+        if: steps.pins.outputs.full_image == 'true'
+        run: |
+          python3 tools/prepare_ci_userdata.py --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --mksquashfs /usr/bin/mksquashfs --mke2fs /usr/sbin/mke2fs --img2simg /usr/bin/img2simg
+      - name: Save full candidate (Sony OEM excluded)
+        if: steps.pins.outputs.full_image == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pdx213-noble-full-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.UT_PORTS_DATA_DIR }}/builds/pdx213/ci-${{ github.run_id }}-${{ github.run_attempt }}/pdx213-noble-full-candidate.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
       - name: Archive kernel and boot build results
         run: |
           build="$UT_PORTS_DATA_DIR/builds/pdx213/ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -98,4 +113,4 @@ jobs:
           compression-level: 0
           retention-days: 30
       - name: Explain qualification boundary
-        run: echo 'Kernel and boot built. No vendor/OEM, userdata, phone qualification, flash, OTA or release publication was performed.'
+        run: echo 'Kernel/boot built. Full userdata candidate is gated on the locked public vendor redistribution review. Sony OEM, device installation qualification and flashing are excluded.'
