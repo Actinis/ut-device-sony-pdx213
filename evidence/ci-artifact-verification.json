@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "Exact downloaded CI build verified on host; this boot image was not flashed or runtime-qualified",
+  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38084121409",
+  "device_commit": "0e3ab107a6da3fa712e2fbe7d16f13fe9ad17790",
+  "kernel_commit": "e2155c72658ab2d73a3c3e719b5ab2c4f36aa072",
+  "build_id": "ci-38084121409-1",
+  "lock_sha256": "543fc59fc9eed1515da72c10467c20de6cae378931529e3a6aca29fd22098cc6",
+  "artifact_count": 42,
+  "boot_sha256": "2703af335cda18d4445a128bc3a8f3d234ac0f586d7abca9f8a921cd641b2db2",
+  "dtbo_sha256": "4cd187b380dc43027760da319b152b94f65c970d923fb7f391eb2cce778f7813",
+  "camera_sha256": "26634860e46455e3bafef36205bcadc4ebb16f0b7f62235a6615cde26268607a",
+  "passed": [
+    "Run concluded success and uploaded one kernel/boot artifact",
+    "Exact source commit, lock and build ID match archived input identity",
+    "All 42 artifact SHA256 and file modes match complete build report",
+    "Mandatory helpers and kernel module results present",
+    "Camera library matches bytes qualified on device"
+  ],
+  "not_confirmed": [
+    "Runtime of this exact new boot image",
+    "Full userdata CI: stage skipped while vendor remains manual",
+    "Full public install-image redistribution or stock-baseline installation"
+  ],
+  "phone_reference": "installation-candidate.json"
+}
