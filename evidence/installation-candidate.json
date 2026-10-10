@@ -3,17 +3,17 @@
   "variant": "XQ-BT52",
   "slot": "a",
   "status": "Local source-vendor clean installation qualified in the scopes listed below; public full-image release pending",
-  "device_commit": "e0a334df59debcd4e9126f9f42fb5edce1543e3b",
+  "device_commit": "3063cc30c4520362d528cf69ca7c608b3648d4d0",
   "kernel_commit": "e2155c72658ab2d73a3c3e719b5ab2c4f36aa072",
-  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38089144991",
-  "build_id": "ci-38089144991-1",
-  "boot_sha256": "aabd9c4939a19c054b9912bcf5c847c263ad084f6e01dd0729726ea58871f485",
-  "userdata_sparse_sha256": "d1eb4a5cf65d871ad9d9f5ff995f0ccc4939dc84a7c6b2d25367cf69ba73e7d9",
+  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38092261682",
+  "build_id": "ci-38092261682-1",
+  "boot_sha256": "a4d5e0c3dd505d99fb1d36748b6dfad43072f6c17c52d6f0a6af5f9bdf54d02d",
+  "userdata_sparse_sha256": "03aea8299ae4a1794511ef1d8c3637c1547f26a81dd32346dbe94710c356a6e0",
   "vendor_sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
   "vendor_scope": "Explicitly pinned local source-vendor qualification input; not approved for redistribution",
   "readback": {
     "userdata": {
-      "sha256": "c809e4a77b99f04ca0adf4609071c107e133bc2402170afcdeb08c79eb94a03e",
+      "sha256": "7c594c72149f49fee899a6caa329e48ac1c9481716bf2887f9947348e17df986",
       "bytes": 3221225472,
       "readback_matches": true
     },
@@ -39,32 +39,31 @@
     }
   },
   "passed": [
-    "All 42 exact CI artifacts verified against the clean source checkout and build report",
-    "Offline userdata backup compared with read-only source; regular-file hashes and restored ext4 filesystem checked",
-    "OEM and userdata flashed as RAW sparse with 128-MiB transfer limit; all five recorded partition readbacks matched",
-    "Three-GiB seed expanded to actual userdata partition",
-    "Native setup wizard completed; Wi-Fi credentials supplied only after flashing",
-    "Stock Camera recorded and stopped video and captured main/front JPEGs in the same process; all media fully decoded",
-    "Synthetic MTP upload/download matched and test object was deleted",
-    "Wi-Fi reconnected after normal reboot; wizard completion persisted",
-    "IPv4 mobile data worked after first setup and when switching from Wi-Fi after reboot; Wi-Fi return also passed",
-    "Development USB gateway remained inactive with MTP active",
-    "Speaker test tone detected by both microphone inputs",
-    "Live streams received for accelerometer, gyroscope, magnetometer, ambient light, proximity, rotation and compass"
+    "All 42 exact CI artifacts verified against clean checkout, source lock and build report",
+    "Offline state backup compared with read-only source; all three immutable payload hashes matched; restored ext4 checked",
+    "Clean rootfs privacy checks: no Wi-Fi profiles, host/authorized keys or wizard completion; development SSH/gateway disabled",
+    "Pristine squashfs contains empty radio-owned oFono directory with mode 0700",
+    "OEM and userdata flashed as RAW sparse with 128-MiB transfer limit; all five recorded readbacks matched",
+    "Native setup wizard completed; credentials supplied after flashing",
+    "Normal reboot retained setup completion, radio storage and automatically connected Wi-Fi; HTTPS passed",
+    "MTP synthetic upload/download matched and object deleted after reboot; USB gateway remained inactive",
+    "Stock Camera recorded/stopped video and captured main/front JPEGs in one process; all media fully decoded",
+    "Speaker test tone detected by both microphones",
+    "Live accelerometer, gyroscope, magnetometer, ambient-light, proximity, rotation and compass streams"
   ],
   "camera": {
     "single_stock_camera_ui_sequence": true,
     "jpeg_dimensions": [
       [
-        2688,
-        1512
-      ],
-      [
         3840,
         2160
+      ],
+      [
+        2688,
+        1512
       ]
     ],
-    "video_duration_seconds": 19.456,
+    "video_duration_seconds": 14.4,
     "video_codec": "h264",
     "video_dimensions": [
       1080,
@@ -88,7 +87,42 @@
   ],
   "privacy": "No keys, passwords, screenshots, recordings, coordinates, network names, device identifiers or raw logs included",
   "vendor_build_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
-  "backup_limitation": "One POSIX ACL could not be restored on the host; full ACL restoration is not claimed.",
-  "gnss_scope": "Indoor standalone HAL test produced satellite and NMEA callbacks but no position fix; end-to-end GNSS on this candidate remains unconfirmed.",
-  "radio_state_fix_scope": "Empty radio-owned oFono storage fix survived a runtime reboot; inclusion in commit 3063cc30c4520362d528cf69ca7c608b3648d4d0 is source-tested, but its pristine image has not yet been qualified."
+  "backup_limitation": "POSIX ACL restoration on the host is not claimed; regular-file hashes and restored ext4 were checked.",
+  "gnss_scope": "End-to-end GNSS position on this final source-vendor candidate has not been confirmed.",
+  "radio_state_fix_scope": "Included in pristine squashfs and confirmed after clean first boot and normal reboot without runtime repair.",
+  "mtp": {
+    "upload": true,
+    "download_matches": true,
+    "synthetic_object_deleted": true,
+    "scope": "Exact USB parent of verified Sony SSH interface"
+  },
+  "network_switch_qualification": {
+    "device_commit": "e0a334df59debcd4e9126f9f42fb5edce1543e3b",
+    "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38089144991",
+    "scope": "Same source-vendor input: IPv4 mobile data after first setup and Wi-Fi-to-mobile switching after reboot; return to Wi-Fi passed. Final candidate has no SIM and these scenarios were not repeated."
+  },
+  "audio_tone_metrics": {
+    "input-builtin_mic": {
+      "playback_exit": 0,
+      "samples": 121920,
+      "peak_1khz_amplitude": 2181.69
+    },
+    "input-back_mic": {
+      "playback_exit": 0,
+      "samples": 120000,
+      "peak_1khz_amplitude": 496.78
+    }
+  },
+  "sensor_stream_bytes": {
+    "accelerometersensor": 588,
+    "gyroscopesensor": 1064,
+    "magnetometersensor": 1760,
+    "alssensor": 220,
+    "proximitysensor": 20,
+    "orientationsensor": 0,
+    "rotationsensor": 588,
+    "compasssensor": 588,
+    "stepcountersensor": 0,
+    "pressuresensor": 0
+  }
 }

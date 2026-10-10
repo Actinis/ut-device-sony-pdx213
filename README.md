@@ -8,9 +8,11 @@ Sources include independent GPT-label boot/storage integration, a Noble rootfs
 overlay, native Android hardware services, kernel/boot builds and local image
 assembly. The runtime prototype boots from ordinary ext4 userdata with separate
 Ubuntu, Android and vendor images.
-A qualified public vendor artifact and an installation after complete
-stock Android restoration are still unqualified. Do not apply prototype storage
-assumptions to other models or firmware revisions.
+Public vendor redistribution and installation after complete stock Android
+restoration remain unqualified. A complete local source-vendor candidate has
+passed clean installation, first setup, normal reboot, Wi-Fi, MTP, camera,
+microphone tone tests and sampled sensor streams; see the exact scopes below.
+Do not apply prototype storage assumptions to other models or firmware revisions.
 
 There is no universal UBports Installer integration, complete installation release or
 OTA channel. Successful main builds are published as experimental kernel/boot prereleases; version tags create draft candidates. See [publication rules](docs/RELEASING.md).
@@ -20,6 +22,7 @@ OTA channel. Successful main builds are published as experimental kernel/boot pr
 - [Hardware results and gaps](docs/HARDWARE.md)
 - [Installation qualification](docs/INSTALLATION-QUALIFICATION.md)
 - [Release preparation](docs/RELEASING.md)
+- [Acceptance before a complete installation release](docs/RELEASE-CANDIDATE.md)
 
 CI validates source metadata and tests, and the build workflow compiles the
 kernel, DTBO, helpers and boot image from the pinned sources. It does not flash

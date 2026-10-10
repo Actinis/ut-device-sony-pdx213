@@ -31,7 +31,7 @@ apply `fastboot -w` after installing the populated userdata image.
 ## Current complete local candidate
 
 The local source-vendor candidate assembled from exact CI run
-[38089144991](https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38089144991)
+[38092261682](https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38092261682)
 was flashed after erasing userdata. Its source-vendor input is explicitly pinned
 by image and build-report hashes; Sony v9a OEM was acquired separately. The
 three-GiB seed expanded on first boot and the native setup wizard completed.
@@ -39,24 +39,28 @@ Stock Camera recorded and stopped video with audio and captured main/front
 JPEGs in the same process; the complete media were decoded privately. MTP
 upload/download of a synthetic file matched, and the object was removed.
 
-Normal reboot retained setup completion and reconnected Wi-Fi. IPv4 mobile data
-worked after first setup and after switching off Wi-Fi following a reboot;
-returning to Wi-Fi also worked. MTP remained active without enabling the
-development USB gateway or its DNS. Mobile startup after a reboot with Wi-Fi
-disabled remains unqualified because the SIM was removed during that test.
-IPv6 has not been qualified on a usable IPv6 network.
+Normal reboot retained setup completion and radio storage and reconnected Wi-Fi
+with successful IPv4 HTTPS. MTP remained active without enabling the development
+USB gateway or its DNS. MTP upload/download and camera media decoding were
+repeated on this exact candidate.
+
+Mobile data and both network-switching directions were qualified with the same
+source-vendor input on device commit `e0a334d` (exact scope in the evidence).
+The final candidate has no SIM, so mobile startup after reboot with Wi-Fi disabled
+and repeated mobile switching remain unqualified here. IPv6 has not been
+qualified on a usable IPv6 network.
 
 Speaker test tones were detected by both microphones. Accelerometer, gyroscope,
 magnetometer, ambient-light, proximity, rotation and compass produced streams;
-this does not establish physical accuracy or wake gestures. Indoor GNSS emitted
-satellite/NMEA callbacks without a position fix. Calls/SMS, GNSS in Morph, NFC,
+this does not establish physical accuracy or wake gestures. A GNSS position fix
+is not yet qualified on this exact candidate. Calls/SMS, GNSS in Morph, NFC,
 fingerprint, physical wake gestures and overnight battery/sleep require final
 source-vendor qualification; earlier component results do not establish these
 on this exact complete candidate.
 
-The empty radio-owned oFono storage fix is included in current sources and
-survived a runtime reboot. Its pristine current-source image has not yet been
-qualified. See [release acceptance](RELEASE-CANDIDATE.md).
+The empty radio-owned oFono storage fix is verified in the pristine squashfs
+and after first boot and normal reboot, without runtime repairs. See
+[release acceptance](RELEASE-CANDIDATE.md).
 
 For autonomous qualification only, a private key-only USB SSH service was added
 to the writable overlay after image readback. It is absent from the distributed
@@ -64,11 +68,10 @@ source/image inputs. Runtime qualification therefore includes this diagnostic
 overlay. See [sanitized evidence](../evidence/installation-candidate.json).
 
 The OEM, userdata, DTBO and vbmeta image prefixes were read back with matching
-checksums before first boot. A coherent offline userdata backup was compared
-with the original filesystem, extracted and checked as a restored ext4 image
-on the host. One POSIX ACL was unsupported during host extraction; full ACL
-restoration is not claimed. Actual stock restoration and interrupted-flash recovery remain
-unqualified. Firmware partitions were retained; this is not a complete stock
+checksums before first boot. A coherent offline state archive and
+checksum-verified immutable payloads were compared with the original filesystem and checked as a restored ext4 image on
+the host. Full POSIX ACL restoration on the host is not claimed. Actual stock
+restoration and interrupted-flash recovery remain unqualified. Firmware partitions were retained; this is not a complete stock
 Android baseline test or approval for a public full-image release.
 
 Before first installable release:
