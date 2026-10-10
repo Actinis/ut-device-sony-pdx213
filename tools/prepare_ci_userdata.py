@@ -13,6 +13,7 @@ import urllib.request
 
 from sources_lock import validate
 from build_manifest import sha
+from prepare_install_bundle import flashing_instructions
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -69,6 +70,14 @@ def main():
              'build-report.json': build/'out/build-report.json',
              'input-identity.json': build/'input-identity.json',
              'sources.lock.json': ROOT/'sources.lock.json'}
+    archive_candidate(build, package, files)
+
+
+def archive_candidate(build, package, files):
+    instructions = package/'FLASHING.md'
+    device_commit = json.loads((build/'out/build-report.json').read_text())['device_commit']
+    instructions.write_text(flashing_instructions(False, device_commit))
+    files['FLASHING.md'] = instructions
     manifest = package/'candidate-manifest.json'
     manifest.write_text(json.dumps({'schema_version': 1, 'qualification': 'pending; not an installation release',
                                    'sony_oem': 'excluded; user obtains directly from Sony',

@@ -3,9 +3,12 @@ from pathlib import Path
 import struct
 import sys
 import tempfile
+import tarfile
+import hashlib
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from prepare_install_bundle import require_file, require_raw_sparse, stage
+from prepare_install_bundle import require_file, require_raw_sparse, stage, flashing_instructions
+from prepare_ci_userdata import archive_candidate
 from build_manifest import sha
 
 class InstallBundleTests(unittest.TestCase):
@@ -42,5 +45,32 @@ class InstallBundleTests(unittest.TestCase):
             self.assertEqual(out.stat().st_mode&0o777,0o700)
             self.assertIn('vbmeta_system_a',(out/'FLASHING.md').read_text())
             with self.assertRaises(FileExistsError):stage({'boot.img':source},{},out)
+
+class FullCandidateInstructions(unittest.TestCase):
+    def test_exact_source_and_separate_oem_are_checksum_covered(self):
+        with tempfile.TemporaryDirectory() as d:
+            build=Path(d);package=build/'userdata-package';package.mkdir()
+            out=build/'out';out.mkdir()
+            report=out/'build-report.json';report.write_text(json.dumps({'device_commit':'a'*40}))
+            image=package/'userdata.img';image.write_bytes(b'userdata fixture')
+            # A separately obtained OEM must never be swept into the CI archive.
+            (package/'oem.img').write_bytes(b'private owner input')
+            archive_candidate(build,package,{'userdata.img':image,'build-report.json':report})
+            with tarfile.open(build/'pdx213-noble-full-candidate.tar.gz') as archive:
+                self.assertNotIn('oem.img',archive.getnames())
+                instructions=archive.extractfile('FLASHING.md').read()
+                self.assertIn(b'checkout --detach '+b'a'*40,instructions)
+                self.assertIn(b'--fastboot-output ./oem.img',instructions)
+                self.assertIn(b'vbmeta_system_a',instructions)
+                manifest=json.loads(archive.extractfile('candidate-manifest.json').read())
+                self.assertEqual(manifest['artifacts']['FLASHING.md']['sha256'],hashlib.sha256(instructions).hexdigest())
+                sums=archive.extractfile('SHA256SUMS').read().decode().splitlines()
+                for line in sums:
+                    digest,name=line.split('  ',1)
+                    self.assertEqual(digest,hashlib.sha256(archive.extractfile(name).read()).hexdigest())
+
+    def test_invalid_source_commit_cannot_enter_commands(self):
+        for value in [None,'main','a'*39,'a'*40+'; echo bad']:
+            with self.assertRaises(ValueError):flashing_instructions(False,value)
 
 if __name__=='__main__':unittest.main()

@@ -67,14 +67,8 @@ def candidate(build, repository, oem):
         'images':{name:{'sha256':sha(path),'bytes':path.stat().st_size} for name,path in sorted(images.items())}}
 
 
-def stage(images,manifest,destination,hardlink=False):
-    destination.mkdir(mode=0o700,exist_ok=False)
-    for name,path in images.items():
-        if hardlink:os.link(path,destination/name)
-        else:shutil.copyfile(path,destination/name)
-    (destination/'install-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    files=list(images)+['install-manifest.json']
-    (destination/'FLASHING.md').write_text("""# XQ-BT52 local installation candidate
+def flashing_instructions(oem_included=True, device_commit=None):
+    text = """# XQ-BT52 local installation candidate
 
 Experimental Ubuntu Touch 24.04, unlocked XQ-BT52, slot A only. Erases all userdata.
 Use the firmware/bootloader baseline documented for the exact candidate. Firmware
@@ -111,7 +105,45 @@ fastboot -s "$SERIAL" reboot
 Boot is written last. Do not use `fastboot -w` after installing populated userdata.
 First boot expands the seed filesystem to the device's actual userdata partition.
 Complete the setup wizard. SSH is disabled and private keys are not included.
-""")
+"""
+    if not oem_included:
+        if not isinstance(device_commit, str) or not re.fullmatch('[0-9a-f]{40}', device_commit):
+            raise ValueError('Exact device source commit required for OEM preparation')
+        text = text.replace('This local bundle\ncontains owner-obtained OEM/vendor inputs and must not be uploaded or redistributed.',
+                            'Sony OEM is excluded from this archive and must be obtained separately.\nA CI build is not installation or firmware-baseline qualification.')
+        preparation = """## Obtain and verify OEM separately
+
+On Linux with Python 3, Git and Android platform-tools, download the v9a Lena
+archive directly from Sony after accepting Sony's EULA. See the exact source
+checkout's docs/OEM.md and docs/INSTALLATION-QUALIFICATION.md before flashing.
+Do not flash the original sparse OEM directly: large FILL writes have hung.
+The verifier below checks the pinned archive, member and decoded image and
+converts FILL to RAW. It does not download or accept licence terms for you.
+
+```sh
+git clone https://github.com/Actinis/ut-device-sony-pdx213.git pdx213-sources
+git -C pdx213-sources checkout --detach COMMIT
+python3 pdx213-sources/tools/verify_sony_oem.py \\
+  --archive /path/to/SW_binaries_for_Xperia_Android_11_4.19_v9a_lena.zip \\
+  --output ./oem-original.img --fastboot-output ./oem.img
+```
+
+The separately generated OEM is validated by that verifier; SHA256SUMS covers
+only the files supplied by this archive. Keep the original and derived OEM local.
+
+""".replace('COMMIT', device_commit)
+        text = text.replace('From this directory, verify checksums', preparation + 'From this directory, verify checksums')
+    return text
+
+
+def stage(images,manifest,destination,hardlink=False):
+    destination.mkdir(mode=0o700,exist_ok=False)
+    for name,path in images.items():
+        if hardlink:os.link(path,destination/name)
+        else:shutil.copyfile(path,destination/name)
+    (destination/'install-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    files=list(images)+['install-manifest.json']
+    (destination/'FLASHING.md').write_text(flashing_instructions())
     files.append('FLASHING.md')
     (destination/'SHA256SUMS').write_text(''.join(sha(destination/name)+'  '+name+'\n' for name in sorted(files)))
 

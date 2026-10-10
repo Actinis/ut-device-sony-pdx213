@@ -98,8 +98,10 @@ dependencies. The full CI installs these dependencies explicitly.
 When the locked vendor is a reviewed public artifact with explicit
 `redistribution_approved: true`, CI invokes `prepare_ci_userdata.py` after the
 normal build and saves `pdx213-noble-full-candidate.tar.gz`. It contains boot,
-DTBO, userdata, vbmeta and assembly/build/source metadata. Sony OEM is never
-bundled. The current manual vendor disables this stage; see [VENDOR.md](VENDOR.md)
+DTBO, userdata, vbmeta, assembly/build/source metadata and checksum-covered
+`FLASHING.md`. The instructions pin the exact source checkout for separately
+verifying and converting owner-obtained Sony OEM to RAW sparse chunks. Sony OEM
+is never bundled. The current manual vendor disables this stage; see [VENDOR.md](VENDOR.md)
 for its independent source-build recipe and promotion gates.
 
 The normal build also compiles the pinned oFono plugin in its own `ofono/`
