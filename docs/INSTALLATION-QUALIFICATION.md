@@ -7,6 +7,14 @@ Halium Android image, separate vendor image and writable overlay/userdata.
 OEM, modem, Bluetooth, DSP and persist are mounted by partition label.
 No GPT, TA, calibration, persist or bootloader rewrite is part of the recipe.
 
+Read-only inspection of the retained `super` system partition reports stock
+Android 12, Sony build `62.1.A.0.533`. This is retained-system provenance, not
+proof that every firmware partition belongs to that build or that a fresh stock
+restoration has been tested. Halium/AOSP 11 identifies the adaptation base; it
+is not a requirement to downgrade the stock operating system to Android 11.
+Other stock firmware baselines remain unqualified. See
+[firmware evidence](../evidence/retained-stock-system.json).
+
 The prototype has an ext4 clean-install test with fastboot transfers limited to
 128 MiB, RAW rather than large FILL sparse chunks, a three-GiB seed filesystem
 and first-boot expansion to its actual userdata partition. Its measured storage

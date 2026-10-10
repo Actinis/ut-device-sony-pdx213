@@ -56,7 +56,7 @@ def candidate(build, repository, oem):
         raise ValueError('OEM decoded bytes do not match the locked Sony input')
     images['oem.img']=oem
     report=json.loads((build/'out/build-report.json').read_text())
-    return images,{'schema_version':1,'device':'XQ-BT52','slot':'a',
+    return images,{'schema_version':1,'bundle_tool_sha256':sha(Path(__file__)),'device':'XQ-BT52','slot':'a',
         'ut_series':'24.04','device_commit':report['device_commit'],
         'kernel_commit':lock['kernel']['commit'],'build_id':build.name,
         'lock_sha256':sha(lock_path),'build_report_sha256':sha(build/'out/build-report.json'),
@@ -74,11 +74,11 @@ def stage(images,manifest,destination,hardlink=False):
         else:shutil.copyfile(path,destination/name)
     (destination/'install-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     files=list(images)+['install-manifest.json']
-    (destination/'SHA256SUMS').write_text(''.join(sha(destination/name)+'  '+name+'\n' for name in sorted(files)))
     (destination/'FLASHING.md').write_text("""# XQ-BT52 local installation candidate
 
 Experimental Ubuntu Touch 24.04, unlocked XQ-BT52, slot A only. Erases all userdata.
-The Android 11 firmware/bootloader baseline must already be present. Do not change
+Use the firmware/bootloader baseline documented for the exact candidate. Firmware
+compatibility is currently qualified only on the development device. Do not change
 GPT, TA, persist, modem/DSP/bootloader or relock the bootloader. This local bundle
 contains owner-obtained OEM/vendor inputs and must not be uploaded or redistributed.
 No OTA or universal Installer. A stock-baseline restoration test remains required.
@@ -112,6 +112,8 @@ Boot is written last. Do not use `fastboot -w` after installing populated userda
 First boot expands the seed filesystem to the device's actual userdata partition.
 Complete the setup wizard. SSH is disabled and private keys are not included.
 """)
+    files.append('FLASHING.md')
+    (destination/'SHA256SUMS').write_text(''.join(sha(destination/name)+'  '+name+'\n' for name in sorted(files)))
 
 
 def main():

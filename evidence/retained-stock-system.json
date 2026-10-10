@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "variant": "XQ-BT52",
+  "source": "Read-only loop mapping of the system_a extent in retained super metadata; mapping removed after inspection",
+  "stock_system_android_version": "12",
+  "stock_system_build_id": "62.1.A.0.533",
+  "scope": "Unused retained stock system metadata only; no firmware writes or stock boot performed",
+  "not_confirmed": [
+    "Complete stock restoration and boot",
+    "Provenance/version equivalence of every firmware partition",
+    "Compatibility of other firmware baselines"
+  ]
+}

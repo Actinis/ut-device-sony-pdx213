@@ -37,6 +37,8 @@ class InstallBundleTests(unittest.TestCase):
             self.assertEqual((out/'boot.img').stat().st_ino,source.stat().st_ino)
             sums=(out/'SHA256SUMS').read_text();self.assertIn(sha(out/'boot.img')+'  boot.img',sums)
             self.assertIn(sha(out/'install-manifest.json')+'  install-manifest.json',sums)
+            self.assertIn(sha(out/'FLASHING.md')+'  FLASHING.md',sums)
+            self.assertNotIn('Android 11 firmware/bootloader baseline',(out/'FLASHING.md').read_text())
             self.assertEqual(out.stat().st_mode&0o777,0o700)
             self.assertIn('vbmeta_system_a',(out/'FLASHING.md').read_text())
             with self.assertRaises(FileExistsError):stage({'boot.img':source},{},out)
