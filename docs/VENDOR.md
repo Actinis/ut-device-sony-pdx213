@@ -61,3 +61,22 @@ The manual `Android vendor source candidate` workflow uses runner labels
 `UT_VENDOR_DATA_DIR`. It requires 300 GiB free and Docker access. No matching
 runner is currently configured. It uploads source/build reports only, never
 unreviewed vendor bytes.
+
+## Verified host candidate
+
+The pinned recipe has completed a local source build: 733 projects and all
+17 patches were checked. The raw vendor image is 106,520,576 bytes and the
+sparse image is 56,123,504 bytes. Input/output hashes and the container identity
+are recorded in [the host evidence](../evidence/vendor-source-build.json).
+This does not claim bit-identical rebuilding or a successful phone boot.
+
+Read-only comparison found all qualified vendor paths present, 285 file-content
+differences, unchanged symlink targets and 241 permission/ownership differences.
+The new image needs its own hardware qualification. Legacy PN54x/PN55x NXP
+firmware blobs are absent. All nine ACDB/calibration files match the pinned
+public Sony device tree, but none appears in the generated NOTICE mapping.
+Their distribution terms must be resolved before approving a public vendor
+artifact; public Git hosting alone is not recorded as distribution approval.
+
+The qualified manual vendor remains the packaging input. The source candidate
+has not replaced it, been flashed, or been uploaded as a public binary.

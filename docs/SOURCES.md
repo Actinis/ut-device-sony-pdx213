@@ -27,8 +27,10 @@ no build-time backport or patch application is required.
 ## Manual inputs and limits
 
 The vendor image is a mer-hybris/Jolla-built Android 11 AOSP adaptation. Its
-exact SHA256 is pinned, but an independent source rebuild and a publicly
-obtainable byte-equivalent artifact have not been established. The vendor input is not yet independently reproducible. The reviewed Android source
+exact SHA256 is pinned. An independent source candidate has passed a host
+build, but differs from this qualified manual image and still requires hardware
+and redistribution review. A qualified public vendor artifact is not established;
+see [VENDOR.md](VENDOR.md). The reviewed Android source
 manifest and vendor notices are under `notices/`; do not infer that these alone
 complete the source or redistribution audit.
 

@@ -1,0 +1,34 @@
+{
+  "scope": "host source build and read-only inventory; hardware and redistribution qualification pending",
+  "device_build_recipe_commit": "4e7c96ebae2a8b5ae8a21cb46d910dc1dd860dde",
+  "projects": 733,
+  "patches": 17,
+  "recipe": {
+    "manifest_sha256": "a8920fe5ac3c7ef07c31d844293e36ad9c049cb405f222d2918ce8940a8eb6ae"
+  },
+  "builder_sha256": "8e5cf0c379208e55c43c64fc859aaa9aa232c269309ad83ce238f1fe11be5496",
+  "container_recipe_sha256": "5afcbcb931c9ba8eb78f326d206eb6ddad8c39ffdbb1d9b036e16ab185cfbf33",
+  "container_image": "sha256:5e2dcbbbfeff9caab4f93840fc5b97ca604e8af50d4f0c2f5ce40c32a8517888",
+  "host_packages_sha256": "777342498e2a2f98389cc967cf8cabbded84f38a4b64bb444b507c95a0776af2",
+  "build_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
+  "vendor": {
+    "sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
+    "bytes": 106520576
+  },
+  "vendor_sparse": {
+    "sha256": "700800dd8f0677af0abbb4e7a575e6bb0e125bf0558deca33f7699adf1060ac0",
+    "bytes": 56123504
+  },
+  "inventory": {
+    "candidate_entries": 1074,
+    "missing_qualified_paths": 0,
+    "file_content_differences": 285,
+    "symlink_target_differences": 0,
+    "permission_ownership_differences": 241,
+    "legacy_nxp_firmware_files": 0,
+    "calibration_files_matching_public_source": 9,
+    "calibration_files_in_generated_notice": 0
+  },
+  "images_redistributed": false,
+  "phone_tested": false
+}

@@ -8,7 +8,7 @@ Sources include independent GPT-label boot/storage integration, a Noble rootfs
 overlay, native Android hardware services, kernel/boot builds and local image
 assembly. The runtime prototype boots from ordinary ext4 userdata with separate
 Ubuntu, Android and vendor images.
-An independently reproducible vendor input and an installation after complete
+A qualified public vendor artifact and an installation after complete
 stock Android restoration are still unqualified. Do not apply prototype storage
 assumptions to other models or firmware revisions.
 
