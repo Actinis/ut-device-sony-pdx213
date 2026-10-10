@@ -87,6 +87,14 @@ firmware blobs are absent. All nine ACDB/calibration files match the pinned
 public Sony device tree, but none appears in the generated NOTICE mapping.
 Their distribution terms must be resolved before approving a public vendor
 artifact; public Git hosting alone is not recorded as distribution approval.
+An English [licence clarification request](https://github.com/sonyxperiadev/device-sony-pdx213/issues/10)
+is open with Sony. No permission to redistribute is inferred from filing it.
+
+The generated per-installed-file NOTICE mapping covers only 88 of 915 installed
+vendor files. The other 827 are not automatically considered unlicensed: many
+are compiled from public source with licence files elsewhere. The complete
+module-to-source/licence review remains required; resolving the nine calibration
+files alone is not recorded as approval for the entire image.
 
 The qualified manual vendor remains the packaging input. The source candidate
 has not replaced it as a packaging input or been uploaded as a public binary.
