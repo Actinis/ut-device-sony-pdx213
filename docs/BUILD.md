@@ -46,11 +46,13 @@ is conditional on reviewed vendor inputs; OEM is always excluded.
 
 ## Local development userdata assembly
 
-After resolving the manual vendor input, use its explicit file path:
+For local assembly, supply the locked vendor and its pinned source-build report:
 
 ```sh
 fakeroot python3 tools/package_userdata.py --build-id clean-noble-001 \
-  --vendor /path/to/reviewed-vendor.img \
+  --vendor /path/to/vendor-pdx213-aosp11-001.img \
+  --vendor-build-report /path/to/vendor-pdx213-aosp11-001-build-report.json \
+  --vendor-build-report-sha256 abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9 \
   --mksquashfs /path/to/mksquashfs --mke2fs /path/to/mke2fs \
   --img2simg /path/to/img2simg --avbtool /path/to/avbtool
 ```
@@ -95,14 +97,14 @@ dependencies. The full CI installs these dependencies explicitly.
 
 ## Full CI candidate
 
-When the locked vendor is a reviewed public artifact with explicit
+The locked vendor is a public artifact with explicit
 `redistribution_approved: true`, CI invokes `prepare_ci_userdata.py` after the
 normal build and saves `pdx213-noble-full-candidate.tar.gz`. It contains boot,
 DTBO, userdata, vbmeta, assembly/build/source metadata and checksum-covered
 `FLASHING.md`. The instructions pin the exact source checkout for separately
 verifying and converting owner-obtained Sony OEM to RAW sparse chunks. Sony OEM
-is never bundled. The current manual vendor disables this stage; see [VENDOR.md](VENDOR.md)
-for its independent source-build recipe and promotion gates.
+is never bundled. The pinned vendor and build-report inputs enable this stage;
+see [VENDOR.md](VENDOR.md) for provenance and publication scope.
 
 The normal build also compiles the pinned oFono plugin in its own `ofono/`
 work directory. `out/ofono/binderplugin.so`, licence files and

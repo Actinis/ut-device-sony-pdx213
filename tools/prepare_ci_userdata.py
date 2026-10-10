@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble a full CI candidate only from a reviewed, public locked vendor input."""
+"""Assemble a full CI candidate only from a maintainer-authorized public locked vendor input."""
 import argparse
 import base64
 import hashlib
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check_vendor(entry):
     if entry.get('kind') != 'artifact' or entry.get('redistribution_approved') is not True:
-        raise ValueError('Full CI packaging requires a public checksum-pinned vendor artifact with completed redistribution review')
+        raise ValueError('Full CI packaging requires a public checksum-pinned vendor artifact authorized for publication by the maintainer')
     return entry
 
 
@@ -49,6 +49,7 @@ def main():
     downloads = data/'downloads'
     downloads.mkdir(parents=True, exist_ok=True)
     vendor_path = fetch(vendor, downloads)
+    vendor_report = fetch(vendor['build_report'], downloads) if vendor.get('build_report') else None
     encoded = fetch(lock['avbtool'], downloads)
     raw = base64.b64decode(encoded.read_bytes(), validate=True)
     if hashlib.sha256(raw).hexdigest() != lock['avbtool']['decoded_sha256']:
@@ -60,6 +61,8 @@ def main():
                '--vendor', str(vendor_path), '--avbtool', str(avbtool)]
     for tool in ('mksquashfs', 'mke2fs', 'img2simg'):
         command += ['--'+tool, str(getattr(args, tool))]
+    if vendor_report:
+        command += ['--vendor-build-report', str(vendor_report), '--vendor-build-report-sha256', vendor['build_report']['sha256']]
     subprocess.run(command, check=True)
     build = data/'builds/pdx213'/args.build_id
     package = build/'userdata-package'
@@ -70,6 +73,8 @@ def main():
              'build-report.json': build/'out/build-report.json',
              'input-identity.json': build/'input-identity.json',
              'sources.lock.json': ROOT/'sources.lock.json'}
+    if vendor_report:
+        files['vendor-build-report.json'] = package/'vendor-build-report.json'
     archive_candidate(build, package, files)
 
 

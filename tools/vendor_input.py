@@ -11,6 +11,8 @@ def identify_vendor(image, sources, repository, report=None, report_sha256=None)
         raise ValueError('Vendor must be a nonempty regular file')
     digest = sha(image)
     if report is None and report_sha256 is None:
+        if sources['vendor'].get('build_report'):
+            raise ValueError('Locked source vendor requires its pinned build report')
         if digest != sources['vendor']['sha256']:
             raise ValueError('Unqualified vendor input hash')
         return {'kind': 'locked', 'sha256': digest}
@@ -46,6 +48,14 @@ def identify_vendor(image, sources, repository, report=None, report_sha256=None)
         raise ValueError('Unpatched vendor commit differs from manifest')
     # The reviewed report pins patched commits; base commits remain in the manifest.
     # These checks identify inputs, and do not attest hardware or redistribution approval.
+    locked = sources['vendor']
+    if locked.get('build_report') and locked.get('sha256') == digest:
+        if locked['build_report']['sha256'] != report_sha256:
+            raise ValueError('Report differs from locked vendor provenance')
+        return {'kind': 'locked-source-artifact', 'sha256': digest,
+                'build_report_sha256': report_sha256, 'container_image': record['container_image'],
+                'publication': locked.get('redistribution', 'See locked publication scope'),
+                'qualification': 'Hardware scope recorded separately; publication authorization is not device qualification'}
     return {'kind': 'local-source-candidate', 'sha256': digest,
             'build_report_sha256': report_sha256,
             'container_image': record['container_image'],

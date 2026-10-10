@@ -32,11 +32,11 @@ class VendorRecipe(unittest.TestCase):
                 candidate = Path(directory)/'manifest.xml'; tree.write(candidate)
                 with self.subTest(mode=mode), self.assertRaises(ValueError): projects(candidate)
 
-    def test_current_manual_vendor_cannot_be_uploaded_as_full_image(self):
+    def test_manual_or_unauthorized_vendor_cannot_enable_full_image(self):
         lock = json.loads((ROOT/'sources.lock.json').read_text())
         validate(lock, ROOT)
-        with self.assertRaises(ValueError): check_vendor(lock['sources']['vendor'])
-        entry = dict(lock['sources']['vendor'], kind='artifact')
+        with self.assertRaises(ValueError): check_vendor(dict(lock['sources']['vendor'],kind='manual'))
+        entry = dict(lock['sources']['vendor'], kind='artifact',redistribution_approved=False)
         with self.assertRaises(ValueError): check_vendor(entry)
         entry['redistribution_approved'] = True
         self.assertIs(check_vendor(entry), entry)

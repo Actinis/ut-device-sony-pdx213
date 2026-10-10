@@ -34,12 +34,12 @@ fingerprints, coordinates, photos, recordings and raw phone logs are excluded.
 
 ## Full CI input
 
-The full-userdata stage exists but currently requires a publicly downloadable,
-SHA256-pinned vendor entry with explicit redistribution approval in the lock.
-The source-built vendor is a local qualification input; that flag is not set by
-successful compilation or phone tests. The Android vendor workflow also needs a
-trusted dedicated `ut-pdx213-vendor` runner for its larger source tree. Kernel/boot
-CI success does not mean the full-userdata stage ran.
+The full-userdata stage is enabled by the pinned public vendor and build report.
+The publication flag records explicit maintainer authorization; unresolved Sony
+calibration clarification remains documented in VENDOR.md. GitHub-hosted image
+assembly needs no dedicated vendor runner. Only rebuilding the Android vendor
+source tree requires that larger runner. Kernel/boot success alone still does
+not establish that the full-userdata stage passed; inspect its CI job/artifact.
 
 The first proposed tag should describe an experimental installation candidate
 for the qualified XQ-BT52 baseline. Create it only after the exact candidate and

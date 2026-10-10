@@ -12,6 +12,12 @@ class Lock(unittest.TestCase):
         for name in list(data['sources']):
             bad=json.loads(json.dumps(data));del bad['sources'][name]
             with self.assertRaises(ValueError):module.validate(bad)
+    def test_vendor_report_is_a_pinned_distinct_external_input(self):
+        data=json.loads((Path(__file__).resolve().parents[1]/'sources.lock.json').read_text())
+        for key,value in [('url','http://example.org/report'),('sha256','unpinned'),('filename','../report'),('filename',data['sources']['vendor']['filename']),('bytes',0),('bytes',True),('kind','manual')]:
+            bad=json.loads(json.dumps(data));bad['sources']['vendor']['build_report'][key]=value
+            with self.subTest(key=key,value=value),self.assertRaises(ValueError):module.validate(bad)
+
     def test_wrong_release_and_unpinned_git(self):
         data=json.loads((Path(__file__).resolve().parents[1]/'sources.lock.json').read_text())
         data['ubuntu_touch']='20.04'

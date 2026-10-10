@@ -10,7 +10,7 @@
   "boot_sha256": "a4d5e0c3dd505d99fb1d36748b6dfad43072f6c17c52d6f0a6af5f9bdf54d02d",
   "userdata_sparse_sha256": "03aea8299ae4a1794511ef1d8c3637c1547f26a81dd32346dbe94710c356a6e0",
   "vendor_sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
-  "vendor_scope": "Explicitly pinned local source-vendor qualification input; not approved for redistribution",
+  "vendor_scope": "Exact source-built image published as pdx213-vendor-aosp11-001 with maintainer authorization; hardware evidence remains scoped to the recorded candidate",
   "readback": {
     "userdata": {
       "sha256": "7c594c72149f49fee899a6caa329e48ac1c9481716bf2887f9947348e17df986",
@@ -82,7 +82,7 @@
     "Final source-vendor overnight sleep/battery qualification",
     "IPv6 connectivity on a usable IPv6 test network",
     "Orientation, step-counter and pressure streams; sensor physical accuracy",
-    "Source-vendor redistribution approval and full public CI image"
+    "Full public CI image success on the newly pinned vendor input"
   ],
   "privacy": "No keys, passwords, screenshots, recordings, coordinates, network names, device identifiers or raw logs included",
   "vendor_build_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
@@ -128,5 +128,7 @@
     "source": "User confirmation",
     "result": "SIM operation confirmed by user; no further SIM-dependent qualification requested",
     "scope": "Not an additional automated cold-boot or call-audio measurement on the exact CI candidate"
-  }
+  },
+  "vendor_publication": "https://github.com/Actinis/ut-device-sony-pdx213/releases/tag/pdx213-vendor-aosp11-001",
+  "licence_scope": "Sony calibration clarification and complete licence review unresolved; no Sony grant is asserted"
 }

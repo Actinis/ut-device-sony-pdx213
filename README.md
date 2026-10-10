@@ -8,8 +8,9 @@ Sources include independent GPT-label boot/storage integration, a Noble rootfs
 overlay, native Android hardware services, kernel/boot builds and local image
 assembly. The runtime prototype boots from ordinary ext4 userdata with separate
 Ubuntu, Android and vendor images.
-Public vendor redistribution and installation after complete stock Android
-restoration remain unqualified. A complete local source-vendor candidate has
+Vendor is available as a pinned public build input; its publication scope and
+unresolved licence clarification are documented in [VENDOR.md](docs/VENDOR.md). Installation after
+complete stock Android restoration remains unqualified. A complete local source-vendor candidate has
 passed clean installation, first setup, normal reboot, Wi-Fi, MTP, camera,
 microphone tone tests and sampled sensor streams; see the exact scopes below.
 Do not apply prototype storage assumptions to other models or firmware revisions.
@@ -25,7 +26,8 @@ OTA channel. Successful main builds are published as experimental kernel/boot pr
 - [Acceptance before a complete installation release](docs/RELEASE-CANDIDATE.md)
 
 CI validates source metadata and tests, and the build workflow compiles the
-kernel, DTBO, helpers and boot image from the pinned sources. It does not flash
+kernel, DTBO, helpers, boot and full userdata candidates from the pinned sources.
+Sony OEM is obtained separately. CI does not flash
 or qualify a phone. Device results describe the tested prototype; source-import
 builds require their own installation/hardware qualification.
 

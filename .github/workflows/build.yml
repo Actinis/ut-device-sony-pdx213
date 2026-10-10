@@ -84,7 +84,7 @@ jobs:
             --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
             --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs --debugfs /usr/sbin/debugfs \
             --qemu-aarch64 /usr/bin/qemu-aarch64
-      - name: Assemble reviewed full userdata candidate
+      - name: Assemble pinned full userdata candidate
         if: steps.pins.outputs.full_image == 'true'
         run: |
           python3 tools/prepare_ci_userdata.py --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
@@ -114,4 +114,4 @@ jobs:
           compression-level: 0
           retention-days: 30
       - name: Explain qualification boundary
-        run: echo 'Kernel/boot built. Full userdata candidate is gated on the locked public vendor redistribution review. Sony OEM, device installation qualification and flashing are excluded.'
+        run: echo 'Kernel/boot built. Full userdata candidate is gated on the locked public vendor publication authorization. Sony OEM, device installation qualification and flashing are excluded.'

@@ -26,13 +26,12 @@ no build-time backport or patch application is required.
 
 ## Manual inputs and limits
 
-The vendor image is a mer-hybris/Jolla-built Android 11 AOSP adaptation. Its
-exact SHA256 is pinned. An independent source candidate has passed a host
-build, but differs from this qualified manual image and still requires hardware
-and redistribution review. A qualified public vendor artifact is not established;
-see [VENDOR.md](VENDOR.md). The reviewed Android source
-manifest and vendor notices are under `notices/`; do not infer that these alone
-complete the source or redistribution audit.
+Vendor is a published source-built AOSP 11 artifact with an exact URL, version,
+size and SHA256. Its required nested `build_report` has its own URL, version,
+size, filename and SHA256; the lock validator and CI verify both inputs. See
+[VENDOR.md](VENDOR.md) for source provenance, publication authorization and the
+unresolved Sony calibration/licence clarification. Publication authorization
+is not recorded as a completed legal review.
 
 Sony Android 11 / 4.19 / v9a Lena OEM is obtained by the user directly from
 Sony under its EULA. It is never included in Git or automatic CI. The lock
@@ -92,8 +91,8 @@ Schema 6 additionally pins `vendor_recipe`, the exact `repo_tool` implementation
 and the Python 3 AOSP `avbtool` artifact. The vendor recipe inventory includes
 its manifest, container recipe and builder. The AVB utility is checked both as
 its upstream base64 transport and decoded executable. See [VENDOR.md](VENDOR.md).
-The current manual vendor remains the only qualified packaging input; the new
-source recipe does not silently replace its hash or authorize redistribution.
+The locked public vendor and build report identify the tested source-built
+input. Updating either identity requires an explicit lock change.
 
 ## Radio plugin
 

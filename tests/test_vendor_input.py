@@ -42,8 +42,18 @@ class VendorInputTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.check(bad)
     def test_default_still_requires_locked_vendor(self):
         with self.assertRaises(ValueError):identify_vendor(self.image,self.sources,ROOT)
-        sources=copy.deepcopy(self.sources);sources['vendor']['sha256']=sha(self.image)
+        sources=copy.deepcopy(self.sources);sources['vendor'].pop('build_report',None);sources['vendor']['sha256']=sha(self.image)
         self.assertEqual(identify_vendor(self.image,sources,ROOT)['kind'],'locked')
+    def test_locked_source_requires_exact_provenance_report(self):
+        self.report.write_text(json.dumps(self.record))
+        self.sources['vendor']['sha256']=sha(self.image)
+        self.sources['vendor']['build_report']['sha256']=sha(self.report)
+        with self.assertRaisesRegex(ValueError,'requires its pinned build report'):
+            identify_vendor(self.image,self.sources,ROOT)
+        self.assertEqual(self.check(self.record)['kind'],'locked-source-artifact')
+        self.sources['vendor']['build_report']['sha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'locked vendor provenance'):self.check(self.record)
+
     def test_vendor_symlink_rejected(self):
         link=Path(self.temp.name)/'link';link.symlink_to(self.image)
         with self.assertRaises(ValueError):identify_vendor(link,self.sources,ROOT)

@@ -36,6 +36,16 @@ def validate(data, repository=None):
                 if repository:
                     need((Path(repository)/path).is_file(),'Missing tracked input: '+filename)
                     need(hashlib.sha256((Path(repository)/path).read_bytes()).hexdigest()==checksum,'Tracked input hash mismatch: '+filename)
+    vendor=sources.get('vendor',{})
+    if 'build_report' in vendor:
+        report=vendor['build_report']
+        need(vendor.get('kind')=='artifact' and isinstance(report,dict),'Vendor report requires artifact input')
+        need(report.get('kind')=='artifact' and bool(report.get('version')),'Pinned vendor report artifact required')
+        need(isinstance(report.get('url'),str) and report['url'].startswith('https://'),'Vendor report HTTPS URL required')
+        need(bool(re.fullmatch('[0-9a-f]{64}',report.get('sha256',''))),'Vendor report SHA256 required')
+        filename=report.get('filename','')
+        need(filename and Path(filename).name==filename and filename not in ('.','..') and filename!=vendor.get('filename'),'Distinct safe vendor report filename required')
+        need(type(report.get('bytes')) is int and report['bytes']>0,'Vendor report size required')
     if schema>=3:
         gnss=sources['gnss']
         need(gnss.get('kind')=='derived' and set(gnss.get('dependencies',[]))=={'toolchain','rootfs','halium_gsi'},'Incomplete GNSS dependencies')

@@ -84,14 +84,23 @@
       "sha256": "c6e97f9c8cfe5b7be0a9e6c15af8e7a179475b7ded23e2d1c1fa0945d6fb4382"
     },
     "vendor": {
-      "kind": "manual",
-      "url": "https://github.com/mer-hybris/droid-hal-sony-lena",
-      "version": "Android 11 AOSP mer-hybris/Jolla adaptation; independent rebuild pending",
-      "sha256": "5732d6940d564262579609b09e0130aea69ff24c51302325cf51b1d46d65ffeb",
-      "bytes": 134217728,
-      "filename": "vendor.img",
-      "redistribution": "Not bundled; source-build/provenance and redistribution review required",
-      "acquisition": "Supply a independently reviewed matching adaptation image. No public downloadable artifact for this exact file is established."
+      "kind": "artifact",
+      "url": "https://github.com/Actinis/ut-device-sony-pdx213/releases/download/pdx213-vendor-aosp11-001/vendor.img",
+      "version": "pdx213-vendor-aosp11-001",
+      "sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
+      "bytes": 106520576,
+      "filename": "vendor-pdx213-aosp11-001.img",
+      "redistribution_approved": true,
+      "redistribution": "Publication explicitly authorized by maintainer; Sony audio-calibration clarification remains unresolved. No completed licensing review or Sony redistribution grant is asserted.",
+      "licence_clarification": "https://github.com/sonyxperiadev/device-sony-pdx213/issues/10",
+      "build_report": {
+        "kind": "artifact",
+        "url": "https://github.com/Actinis/ut-device-sony-pdx213/releases/download/pdx213-vendor-aosp11-001/vendor-build-report.json",
+        "version": "pdx213-vendor-aosp11-001",
+        "sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
+        "bytes": 56871,
+        "filename": "vendor-pdx213-aosp11-001-build-report.json"
+      }
     },
     "sony_oem": {
       "kind": "manual",

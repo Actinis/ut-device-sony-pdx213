@@ -1,9 +1,19 @@
-# Independent Android vendor candidate
+# Source-built Android vendor input
 
-The working port currently accepts the qualified manual vendor hash in
-`sources.lock.json`. A new vendor is not qualified simply because it compiles.
-The public source recipe under `device/vendor/` is an independent candidate,
-not a claim that its bytes match the current manual input.
+The packaging input is [pdx213-vendor-aosp11-001](https://github.com/Actinis/ut-device-sony-pdx213/releases/tag/pdx213-vendor-aosp11-001).
+The raw image, versioned URL, byte size and SHA256 are pinned in `sources.lock.json`.
+Its independently pinned `build_report` is a required external input: CI verifies
+image and report hashes, the source manifest, container/builder identities and
+all patched and unpatched project commits before userdata assembly. Reports
+are retained in the full candidate archive. The unchanged upstream NOTICE is
+published with the vendor. Sony OEM and private phone data are excluded.
+
+Publication was explicitly authorized by the port maintainer. The lock's
+`redistribution_approved` flag records that publication authorization; it does
+not assert a Sony grant or completion of a legal review. Clarification of nine
+Sony audio-calibration files remains [open](https://github.com/sonyxperiadev/device-sony-pdx213/issues/10).
+The source/module licence audit is partial; upstream licences remain applicable.
+See [origin audit](../evidence/vendor-origin-audit.json).
 
 `manifest.xml` pins 733 public AOSP/Sony projects including the Android patch
 repository at `f683f1fb0ab85e4e2247ef6ed4910440205b1e98`. The builder checks clean
@@ -38,80 +48,23 @@ python3 tools/build_vendor.py \
 Container package revisions are recorded, but apt repositories are not snapshot
 pinned. The base-image digest, source commits, patches and recipe files are
 locked; bit-identical output is not yet claimed. The normal GitHub-hosted
-kernel runner is not provisioned for this Android source build. A dedicated
-vendor builder or independently reviewed public vendor artifact is required.
+kernel runner is not provisioned for this Android source build. A dedicated vendor builder is required only when rebuilding vendor itself;
+normal full-image CI uses the published immutable vendor input.
 
-## Promotion to full CI
+## Full-image CI
 
-The kernel workflow has a full userdata packaging stage. It remains disabled
-while `vendor.kind` is `manual`. Promotion requires a separately reviewed public
-artifact URL, exact hash/version and `redistribution_approved: true` in the
-artifact entry. This must follow source/licence inventory review and device
-qualification, not merely an upload of the manual prototype image.
+GitHub-hosted CI downloads this vendor and its build report, then assembles
+boot, DTBO, userdata and vbmeta with checksum-covered flashing/OEM preparation
+instructions. No dedicated runner is needed for this path. Actual CI success,
+installation qualification and public installation releases are separate facts;
+see [installation evidence](INSTALLATION-QUALIFICATION.md).
 
-Full candidate assembly verifies the kernel report, dependency identities and
-mandatory modules/helpers. It retains boot, DTBO, userdata, vbmeta and assembly
-metadata in a separate Actions artifact. Sony OEM is excluded. The existing
-kernel/boot publisher does not turn this candidate into an installable release.
-Clean installation from the documented stock firmware baseline and restoration
-remain release gates.
+The optional Android-source workflow uses the dedicated `ut-pdx213-vendor`
+runner labels and `UT_VENDOR_DATA_DIR`. It needs 300 GiB free and Docker; no
+matching runner is configured. It is not required to assemble full images from
+the published vendor input.
 
-The manual `Android vendor source candidate` workflow uses runner labels
-`self-hosted`, `linux`, `x64`, `ut-pdx213-vendor` and repository variable
-`UT_VENDOR_DATA_DIR`. It requires 300 GiB free and Docker access. No matching
-runner is currently configured. It uploads source/build reports only, never
-unreviewed vendor bytes.
-
-## Verified host candidate
-
-The pinned recipe has completed a local source build: 733 projects and all
-17 patches were checked. The raw vendor image is 106,520,576 bytes and the
-sparse image is 56,123,504 bytes. Input/output hashes and the container identity
-are recorded in [the host evidence](../evidence/vendor-source-build.json).
-This does not claim bit-identical rebuilding. On the existing XQ-BT52 installation,
-the source candidate with the exact CI kernel/DTBO/modules and locked camera
-adaptation reaches the normal Ubuntu Touch lock screen. Native Qt recording and
-stop passed with 14.77 seconds of H264 1280x720 video and stereo AAC; both streams
-fully decoded. Main-camera 4000x3000 and front-camera 3264x2448 JPEGs also fully
-decoded in separate sequential native processes. SensorFW returned samples from
-accelerometer, gyroscope, magnetometer, light, proximity, rotation and compass.
-On a freshly installed CI-based userdata with separately acquired Sony v9a OEM,
-a reversible source-vendor substitution also passed the stock Camera scenario:
-video/stop, main photo, same-process front-camera switch and front photo. Both
-JPEGs and the video/audio streams fully decoded. A subsequent normal reboot
-returned to the shell, core services and automatically connected Wi-Fi. This
-is not a complete source-vendor userdata flash or stock-restoration test. Sensor
-accuracy, calls, GNSS, NFC, Bluetooth, suspend and long-duration qualification
-remain pending. The qualified manual vendor was restored after testing. See
-[device evidence](../evidence/vendor-device-candidate.json).
-
-Read-only comparison found all qualified vendor paths present, 285 file-content
-differences, unchanged symlink targets and 241 permission/ownership differences.
-The new image needs its own hardware qualification. Legacy PN54x/PN55x NXP
-firmware blobs are absent. All nine ACDB/calibration files match the pinned
-public Sony device tree, but none appears in the generated NOTICE mapping.
-Their distribution terms must be resolved before approving a public vendor
-artifact; public Git hosting alone is not recorded as distribution approval.
-An English [licence clarification request](https://github.com/sonyxperiadev/device-sony-pdx213/issues/10)
-is open with Sony. No permission to redistribute is inferred from filing it.
-
-The installed inventory contains 684 regular files and 231 symlinks. The
-generated per-installed-path NOTICE mapping covers 88 of these 915 entries. The
-other 827 are not automatically considered unlicensed: many
-are compiled from public source with licence files elsewhere. The complete
-module-to-source/licence review remains required; resolving the nine calibration
-files alone is not recorded as approval for the entire image.
-
-A read-only Ninja/Soong audit found source dependencies for 852 installed paths
-and project-root notice/licence pointers across 139 source projects. Direct
-source inputs detected as ELF or calibration/firmware data were the nine Sony
-calibration files. This partial trace leaves generated/intermediate dependencies
-unresolved and is not an exhaustive licence classifier. See the
-[sanitized audit summary](../evidence/vendor-origin-audit.json).
-
-The qualified manual vendor remains the packaging input. The source candidate
-has not replaced it as a packaging input or been uploaded as a public binary.
-Source-vendor runtime testing uses reversible image substitution. The CI-based
-userdata clean-install result with manual vendor is recorded separately in
-[installation qualification](INSTALLATION-QUALIFICATION.md); it does not qualify
-full source-vendor installation or redistribution.
+The exact image passed local XQ-BT52 clean installation, setup, reboot, Wi-Fi,
+MTP, stock Camera video/main/front stills, both microphone tone tests and selected
+SensorFW streams. Other hardware and firmware-baseline scopes remain explicit
+in the installation evidence. Bit-identical rebuilding is not claimed.
