@@ -18,6 +18,9 @@ class RootfsServiceTests(unittest.TestCase):
             for name in names:
                 (units/name).write_text('[Unit]\nDescription=Test fixture\n[Install]\nWantedBy=multi-user.target\n')
             subprocess.run(['systemctl','--root',d,'enable','utxperia-usb-internet.service'],check=True,capture_output=True)
+            # Match Noble's native SSH unit plus executable legacy init script.
+            init=root/'etc/init.d';init.mkdir(parents=True)
+            script=init/'ssh';script.write_text('#!/bin/sh\nexit 91\n');script.chmod(0o755)
             configure_services(root)
             wants=units/'multi-user.target.wants'
             self.assertFalse((wants/'utxperia-usb-internet.service').is_symlink())

@@ -56,9 +56,12 @@ def prepare_radio_state(root):
 
 
 def configure_services(root):
+    # Configure native units offline; never execute foreign SysV scripts/chroot.
+    # systemd v255: src/systemctl/systemctl-sysv-compat.c enable_sysv_units.
+    env = dict(os.environ, SYSTEMCTL_SKIP_SYSV="1")
     for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-mtp.timer','utxperia-firstboot.service','utxperia-tilt.service']:
-        subprocess.run(['systemctl','--root',str(root),'enable',name],check=True)
-    subprocess.run(['systemctl','--root',str(root),'disable','ssh.service','ssh.socket','utxperia-usb-mtp.service','utxperia-usb-internet.service'],check=True)
+        subprocess.run(['systemctl','--root',str(root),'enable',name],check=True,env=env)
+    subprocess.run(['systemctl','--root',str(root),'disable','ssh.service','ssh.socket','utxperia-usb-mtp.service','utxperia-usb-internet.service'],check=True,env=env)
 
 
 def main():
