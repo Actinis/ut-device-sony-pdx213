@@ -1,7 +1,7 @@
 # XQ-BT52 hardware qualification
 
 Ubuntu Touch 24.04 Noble, native Android 11 adaptation and Sony 4.19 kernel.
-The matrix describes the working XQ-BT52 prototype. The current source-vendor candidate has narrower qualification: exact CI kernel boot, native camera recording/stills and sampled SensorFW channels on existing userdata. See [candidate evidence](../evidence/vendor-device-candidate.json) and [CI kernel qualification](../evidence/kernel-boot-qualification.json). A complete clean-installed image is not yet qualified. No raw private logs or recordings are published. Other variants remain unqualified.
+The matrix describes the working XQ-BT52 prototype. The clean-installed source-vendor candidate has explicit qualification for setup, camera recording/stills, MTP, IPv4 network switching, microphone test tones and sampled SensorFW streams. Other component results must not be assumed to qualify this exact complete image. See [complete-candidate evidence](../evidence/installation-candidate.json), [installation qualification](INSTALLATION-QUALIFICATION.md) and [remaining release gates](RELEASE-CANDIDATE.md). No raw private logs or recordings are published. Other variants remain unqualified.
 
 | Component | Result and evidence |
 | --- | --- |

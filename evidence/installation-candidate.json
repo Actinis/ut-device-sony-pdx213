@@ -2,18 +2,18 @@
   "schema_version": 1,
   "variant": "XQ-BT52",
   "slot": "a",
-  "status": "complete local candidate first setup and stock camera passed; public install release not approved",
-  "device_commit": "f4e7e17363c14126a8bd80e80153691f0434aa65",
+  "status": "Local source-vendor clean installation qualified in the scopes listed below; public full-image release pending",
+  "device_commit": "e0a334df59debcd4e9126f9f42fb5edce1543e3b",
   "kernel_commit": "e2155c72658ab2d73a3c3e719b5ab2c4f36aa072",
-  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38079924323",
-  "build_id": "ci-38079924323-1",
-  "boot_sha256": "73c59518bcf167d69dd97cc9dc0369542b66987458b15d8b9cf0ee88dac18aea",
-  "userdata_sparse_sha256": "81b30caf530aff9612e48952704cb0aea089d6e4f703872a86af697610759f88",
-  "vendor_sha256": "5732d6940d564262579609b09e0130aea69ff24c51302325cf51b1d46d65ffeb",
-  "vendor_scope": "locked manual vendor; source-vendor qualification is separate",
+  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38089144991",
+  "build_id": "ci-38089144991-1",
+  "boot_sha256": "aabd9c4939a19c054b9912bcf5c847c263ad084f6e01dd0729726ea58871f485",
+  "userdata_sparse_sha256": "d1eb4a5cf65d871ad9d9f5ff995f0ccc4939dc84a7c6b2d25367cf69ba73e7d9",
+  "vendor_sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
+  "vendor_scope": "Explicitly pinned local source-vendor qualification input; not approved for redistribution",
   "readback": {
     "userdata": {
-      "sha256": "785c7503edfe587f824a25796caba50c725298fbf137c6185cfaf73f0812b575",
+      "sha256": "c809e4a77b99f04ca0adf4609071c107e133bc2402170afcdeb08c79eb94a03e",
       "bytes": 3221225472,
       "readback_matches": true
     },
@@ -39,18 +39,32 @@
     }
   },
   "passed": [
-    "All 42 exact CI artifacts verified against build report",
-    "Coherent offline backup compared with original filesystem and host restoration ext4 checked",
-    "OEM and userdata flashed as RAW sparse with 128-MiB transfer limit",
+    "All 42 exact CI artifacts verified against the clean source checkout and build report",
+    "Offline userdata backup compared with read-only source; regular-file hashes and restored ext4 filesystem checked",
+    "OEM and userdata flashed as RAW sparse with 128-MiB transfer limit; all five recorded partition readbacks matched",
     "Three-GiB seed expanded to actual userdata partition",
-    "Native setup wizard completed without modifying its completion state directly",
-    "Wi-Fi authenticated with credentials supplied after flashing",
-    "Stock Camera video recorded and stopped; main photo, same-process front-camera switch and front photo saved",
-    "Both JPEG images and full video/audio streams decoded",
-    "One normal systemd reboot returned to active LightDM/oFono/NetworkManager with automatic Wi-Fi reconnection and wizard completion retained"
+    "Native setup wizard completed; Wi-Fi credentials supplied only after flashing",
+    "Stock Camera recorded and stopped video and captured main/front JPEGs in the same process; all media fully decoded",
+    "Synthetic MTP upload/download matched and test object was deleted",
+    "Wi-Fi reconnected after normal reboot; wizard completion persisted",
+    "IPv4 mobile data worked after first setup and when switching from Wi-Fi after reboot; Wi-Fi return also passed",
+    "Development USB gateway remained inactive with MTP active",
+    "Speaker test tone detected by both microphone inputs",
+    "Live streams received for accelerometer, gyroscope, magnetometer, ambient light, proximity, rotation and compass"
   ],
   "camera": {
-    "video_duration_seconds": 14.613333,
+    "single_stock_camera_ui_sequence": true,
+    "jpeg_dimensions": [
+      [
+        2688,
+        1512
+      ],
+      [
+        3840,
+        2160
+      ]
+    ],
+    "video_duration_seconds": 19.456,
     "video_codec": "h264",
     "video_dimensions": [
       1080,
@@ -58,25 +72,23 @@
     ],
     "audio_codec": "aac",
     "sample_rate": 48000,
-    "channels": 2,
-    "jpeg_dimensions": [
-      [
-        3840,
-        2160
-      ],
-      [
-        2688,
-        1512
-      ]
-    ]
+    "audio_channels": 2,
+    "full_media_decode": true
   },
   "diagnostic_scope": "Private key-only USB SSH service added to writable overlay after image readback; absent from release inputs",
   "not_confirmed": [
+    "Mobile-data startup after cold boot with Wi-Fi disabled: SIM was removed during the attempted test",
     "Complete stock Android restoration baseline",
-    "Interrupted-flash recovery on device and actual restoration to stock",
-    "Repeated cold boots and long-duration qualification",
-    "Full hardware and sleep/battery requalification on complete candidate",
+    "Interrupted-flash recovery and actual stock restoration",
+    "Final source-vendor calls/SMS, GNSS fix in Morph, NFC, fingerprint and wake-gesture requalification",
+    "Final source-vendor overnight sleep/battery qualification",
+    "IPv6 connectivity on a usable IPv6 test network",
+    "Orientation, step-counter and pressure streams; sensor physical accuracy",
     "Source-vendor redistribution approval and full public CI image"
   ],
-  "privacy": "No keys, passwords, screenshots, recordings, coordinates, network names, device identifiers or raw logs included"
+  "privacy": "No keys, passwords, screenshots, recordings, coordinates, network names, device identifiers or raw logs included",
+  "vendor_build_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
+  "backup_limitation": "One POSIX ACL could not be restored on the host; full ACL restoration is not claimed.",
+  "gnss_scope": "Indoor standalone HAL test produced satellite and NMEA callbacks but no position fix; end-to-end GNSS on this candidate remains unconfirmed.",
+  "radio_state_fix_scope": "Empty radio-owned oFono storage fix survived a runtime reboot; inclusion in commit 3063cc30c4520362d528cf69ca7c608b3648d4d0 is source-tested, but its pristine image has not yet been qualified."
 }

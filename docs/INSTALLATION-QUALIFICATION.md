@@ -30,14 +30,33 @@ apply `fastboot -w` after installing the populated userdata image.
 
 ## Current complete local candidate
 
-The local candidate assembled from exact CI run [38079924323](https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38079924323)
-was flashed after erasing userdata. It uses the locked manual vendor and a
-separately acquired official Sony v9a OEM. The three-GiB seed expanded on first
-boot; the native setup wizard completed and Wi-Fi connected using a password
-provided only after flashing. Stock Camera recorded and stopped video with
-audio, captured main-camera and front-camera JPEGs, and switched cameras in the
-same process. Media were fully decoded privately. A normal system reboot retained wizard
-completion and automatically reconnected Wi-Fi with the main services active.
+The local source-vendor candidate assembled from exact CI run
+[38089144991](https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38089144991)
+was flashed after erasing userdata. Its source-vendor input is explicitly pinned
+by image and build-report hashes; Sony v9a OEM was acquired separately. The
+three-GiB seed expanded on first boot and the native setup wizard completed.
+Stock Camera recorded and stopped video with audio and captured main/front
+JPEGs in the same process; the complete media were decoded privately. MTP
+upload/download of a synthetic file matched, and the object was removed.
+
+Normal reboot retained setup completion and reconnected Wi-Fi. IPv4 mobile data
+worked after first setup and after switching off Wi-Fi following a reboot;
+returning to Wi-Fi also worked. MTP remained active without enabling the
+development USB gateway or its DNS. Mobile startup after a reboot with Wi-Fi
+disabled remains unqualified because the SIM was removed during that test.
+IPv6 has not been qualified on a usable IPv6 network.
+
+Speaker test tones were detected by both microphones. Accelerometer, gyroscope,
+magnetometer, ambient-light, proximity, rotation and compass produced streams;
+this does not establish physical accuracy or wake gestures. Indoor GNSS emitted
+satellite/NMEA callbacks without a position fix. Calls/SMS, GNSS in Morph, NFC,
+fingerprint, physical wake gestures and overnight battery/sleep require final
+source-vendor qualification; earlier component results do not establish these
+on this exact complete candidate.
+
+The empty radio-owned oFono storage fix is included in current sources and
+survived a runtime reboot. Its pristine current-source image has not yet been
+qualified. See [release acceptance](RELEASE-CANDIDATE.md).
 
 For autonomous qualification only, a private key-only USB SSH service was added
 to the writable overlay after image readback. It is absent from the distributed
@@ -47,13 +66,14 @@ overlay. See [sanitized evidence](../evidence/installation-candidate.json).
 The OEM, userdata, DTBO and vbmeta image prefixes were read back with matching
 checksums before first boot. A coherent offline userdata backup was compared
 with the original filesystem, extracted and checked as a restored ext4 image
-on the host. Actual stock restoration and interrupted-flash recovery remain
+on the host. One POSIX ACL was unsupported during host extraction; full ACL
+restoration is not claimed. Actual stock restoration and interrupted-flash recovery remain
 unqualified. Firmware partitions were retained; this is not a complete stock
 Android baseline test or approval for a public full-image release.
 
 Before first installable release:
 
-- Resolve vendor distribution and complete source-vendor qualification; independently acquired OEM flashing/readback and local first boot passed (see OEM.md).
+- Resolve vendor distribution and complete remaining source-vendor qualification; independently acquired OEM flashing/readback and local first boot passed (see OEM.md).
 - Qualify installation after a documented complete stock Android restoration.
 - Complete repeated cold boots and slot success qualification; exact CI candidate flashing and first setup passed.
 - Verify recovery after interrupted flashing and restoration to stock firmware.
