@@ -106,3 +106,9 @@ The normal build also compiles the pinned oFono plugin in its own `ofono/`
 work directory. `out/ofono/binderplugin.so`, licence files and
 `ofono-build-report.json` are mandatory; clean-rootfs assembly installs the
 plugin and licences. No private device files or diagnostic probes are included.
+
+The kernel pin includes the CIP136 backport candidate and its published audio/
+WireGuard dependency commits. KPTI is enabled in the Noble config; the boot
+command line permits automatic CPU-based selection. This kernel has host
+kernel/module-build evidence and PMF/RNDIS regression checks, but has not been
+qualified on the phone. See the kernel repository's security scope document.

@@ -7,7 +7,7 @@
     "kernel": {
       "kind": "git",
       "url": "https://github.com/Actinis/ut-kernel-sony-msm.git",
-      "commit": "631cc0b5c651bbb4db906f2f865fd42e24c83ac6",
+      "commit": "02f0d3b444c171ecec8c5f61c5d0fc8eae22b0d6",
       "branch": "main",
       "submodules": {
         "drivers/staging/wlan-qc/fw-api": {
@@ -23,8 +23,9 @@
           "url": "https://github.com/sonyxperiadev/vendor-qcom-opensource-wlan-qcacld-3.0.git"
         },
         "techpack/audio": {
-          "commit": "a5bc0f922b0750e60a0e118901653c66121d7f98",
-          "url": "https://github.com/sonyxperiadev/kernel-techpack-audio.git"
+          "commit": "65d1c73554c43a8f5fd4bb09080bf2a6f0be7b76",
+          "url": "https://github.com/Actinis/kernel-techpack-audio.git",
+          "upstream_commit": "a5bc0f922b0750e60a0e118901653c66121d7f98"
         },
         "techpack/camera": {
           "commit": "3505c0c6b1044af320a519a8df86a78b529a18d1",
@@ -43,8 +44,9 @@
           "url": "https://github.com/sonyxperiadev/kernel-techpack-video.git"
         },
         "wireguard-linux-compat": {
-          "commit": "18fbcd68a35a892527345dc5679d0b2d860ee004",
-          "url": "https://github.com/mer-hybris/wireguard-linux-compat.git"
+          "commit": "b32cfdd33c145e11b92fea70f1dc5d75706a016a",
+          "url": "https://github.com/Actinis/wireguard-linux-compat.git",
+          "upstream_commit": "18fbcd68a35a892527345dc5679d0b2d860ee004"
         }
       }
     },
@@ -112,7 +114,7 @@
       "kind": "derived",
       "dependencies": [],
       "files": {
-        "device/boot-metadata.json": "6efef28d828930b7ef3e31ebbe81a1ce0b7337e9bf754769bd1e2adf3f0321d1"
+        "device/boot-metadata.json": "f5dc54210d2f7b0fccc0a0fd3530d32c7b3197728bfcdee883ee7928c7ed80bd"
       },
       "description": "Fixed Sony v0 boot header and cmdline; not copied from private boot backup"
     },
