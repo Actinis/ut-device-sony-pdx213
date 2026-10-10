@@ -72,3 +72,12 @@ licensing attestation. The assembly report binds the vendor identity and report
 pin to the resulting images. Without these explicit inputs the default remains
 the checksum-locked vendor. This local mode does not enable public full-image CI
 or imply hardware qualification or redistribution approval.
+
+## USB networking in user images
+
+The diagnostic USB interface has a local address for maintenance but must not
+install a default gateway or DNS server. `utxperia-usb-internet.service` is an
+optional development unit and is disabled during rootfs assembly. NetworkManager
+owns normal Wi-Fi and cellular routes and DNS. A bench developer may explicitly
+enable USB internet only with a configured host gateway; it is not a user-image
+prerequisite.

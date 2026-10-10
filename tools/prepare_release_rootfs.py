@@ -42,6 +42,12 @@ def install_camera(root, output):
     shutil.copy2(output / 'licences/COPYING', licences / 'COPYING'); os.chown(licences / 'COPYING', 0, 0)
 
 
+def configure_services(root):
+    for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-mtp.timer','utxperia-firstboot.service','utxperia-tilt.service']:
+        subprocess.run(['systemctl','--root',str(root),'enable',name],check=True)
+    subprocess.run(['systemctl','--root',str(root),'disable','ssh.service','ssh.socket','utxperia-usb-mtp.service','utxperia-usb-internet.service'],check=True)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True)
     p.add_argument('--artifacts',type=Path,required=True);a=p.parse_args()
@@ -88,9 +94,7 @@ def main():
             fields[3]=','.join(dict.fromkeys(members+additions[fields[0]]))
         lines.append(':'.join(fields))
     file.write_text('\n'.join(lines)+'\n')
-    for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-internet.service','utxperia-usb-mtp.timer','utxperia-firstboot.service','utxperia-tilt.service']:
-        subprocess.run(['systemctl','--root',str(root),'enable',name],check=True)
-    subprocess.run(['systemctl','--root',str(root),'disable','ssh.service','ssh.socket','utxperia-usb-mtp.service'],check=True)
+    configure_services(root)
     # The port owns its configfs gadget; stock usb-moded must not compete.
     for name in ['etc/systemd/system/usb-moded.service',
                  'etc/systemd/user/mtp-server-usb-moded-watcher.service']:
