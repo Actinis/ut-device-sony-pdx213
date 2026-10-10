@@ -108,7 +108,14 @@ work directory. `out/ofono/binderplugin.so`, licence files and
 plugin and licences. No private device files or diagnostic probes are included.
 
 The kernel pin includes the CIP136 backport candidate and its published audio/
-WireGuard dependency commits. KPTI is enabled in the Noble config; the boot
-command line permits automatic CPU-based selection. This kernel has host
-kernel/module-build evidence and PMF/RNDIS regression checks, but has not been
-qualified on the phone. See the kernel repository's security scope document.
+WireGuard dependency commits. KPTI support is compiled in the Noble config;
+the inherited Sony CPU feature code forces it off by default. Removing a boot
+command-line override does not establish automatic mitigation selection.
+The kernel includes the early-boot RNG API, SDHCI host-lock and QRTR
+packet-length adaptations. A separate clean build booted the existing XQ-BT52
+prototype into the normal lock screen, kept USB SSH and the Android HAL
+container running, and mounted an XZ SquashFS fixture successfully. The
+builder rejects final configs missing ext4, overlayfs, loop or XZ SquashFS
+support required by the release layout. PMF/RNDIS and QRTR bounds regression
+checks passed. This is not clean-install or complete hardware qualification
+of GitHub-built images. See the kernel repository's security scope document.

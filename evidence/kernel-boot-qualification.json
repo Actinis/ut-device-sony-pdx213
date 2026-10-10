@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "boot and XZ mount qualified on existing installation; no clean-install approval",
+  "variant": "XQ-BT52",
+  "kernel_commit": "e2155c72658ab2d73a3c3e719b5ab2c4f36aa072",
+  "kernel_release": "4.19.248-ut-backports-cip136-candidate-ge2155c72658a",
+  "local_build_id": "clean-cip-fixes-003",
+  "local_clean_device_commit": "5fb33d397a2ce32dd558f9d303720da5e4c01b9b",
+  "lock_sha256": "4f061e9d3679b755e15ab4c82f7d277d50b601c09f602388f96210f8864b782e",
+  "boot_sha256": "bae28c66a19f14861e7f8c67711a4505a9a6d521d47d1cbb7cedccfac32ce250",
+  "dtbo_sha256": "4cd187b380dc43027760da319b152b94f65c970d923fb7f391eb2cce778f7813",
+  "baseline": "Existing prototype userdata and qualified manual vendor; no userdata flash or partition-layout changes",
+  "passed": [
+    "Independent clean kernel/boot/modules/helper build",
+    "Flashed boot and DTBO bytes read back and matched SHA256",
+    "Normal Ubuntu Touch lock screen verified by private Mir capture",
+    "USB SSH and LightDM, oFono, NetworkManager, Repowerd and Android container active after more than five minutes",
+    "XZ SquashFS fixture mounted read-only and marker read; temporary mount removed",
+    "Local full userdata assembled under fakeroot; ext4 check, decoded sparse identity and fresh/private-data checks passed"
+  ],
+  "not_confirmed": [
+    "Exact final GitHub-built image runtime",
+    "Clean installation and recovery from stock firmware baseline",
+    "Complete hardware and suspend/battery requalification with this kernel",
+    "Public source-vendor redistribution approval"
+  ],
+  "privacy": "No screenshots, speech, coordinates, keys, device identifiers or raw logs included"
+}

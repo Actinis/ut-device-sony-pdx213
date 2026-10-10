@@ -54,6 +54,11 @@ def main():
     run(*make,'aosp_lena_pdx213_defconfig',env=env)
     run('bash',a.kernel_source/'scripts/kconfig/merge_config.sh','-m','-O',kernel_out,kernel_out/'.config',a.kernel_source/'arch/arm64/configs/pdx213_noble.config',env=env,cwd=a.kernel_source)
     run(*make,'olddefconfig',env=env)
+    # release-init mounts ext4/overlay/loop and packaging uses XZ SquashFS.
+    required={'CONFIG_EXT4_FS=y','CONFIG_OVERLAY_FS=y','CONFIG_BLK_DEV_LOOP=y',
+              'CONFIG_SQUASHFS=y','CONFIG_SQUASHFS_XZ=y'}
+    missing=required-set((kernel_out/'.config').read_text().splitlines())
+    if missing:raise SystemExit('Release filesystem support missing: '+', '.join(sorted(missing)))
     run(*make,'-j'+str(a.jobs),env=env)
     shutil.copy2(kernel_out/'arch/arm64/boot/Image.gz-dtb',out/'Image.gz-dtb')
     payload=(kernel_out/'arch/arm64/boot/dts/somc/lagoon-lena-pdx213_generic-overlay.dtbo').read_bytes()
