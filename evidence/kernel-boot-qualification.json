@@ -19,10 +19,24 @@
     "Local full userdata assembled under fakeroot; ext4 check, decoded sparse identity and fresh/private-data checks passed"
   ],
   "not_confirmed": [
-    "Exact final GitHub-built image runtime",
     "Clean installation and recovery from stock firmware baseline",
     "Complete hardware and suspend/battery requalification with this kernel",
-    "Public source-vendor redistribution approval"
+    "Public source-vendor redistribution approval",
+    "Repeated warm reboot and long-duration qualification of the complete candidate"
   ],
-  "privacy": "No screenshots, speech, coordinates, keys, device identifiers or raw logs included"
+  "privacy": "No screenshots, speech, coordinates, keys, device identifiers or raw logs included",
+  "ci_runtime": {
+    "run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38075607094",
+    "device_commit": "e22208cd9f2ee341bfcb23955a2edfee956dbd30",
+    "boot_sha256": "c7050cae768bc2ea9b08ce911fd26c46a1187ec5bf400342e57401adb3c6655d",
+    "dtbo_sha256": "4cd187b380dc43027760da319b152b94f65c970d923fb7f391eb2cce778f7813",
+    "passed": [
+      "All 38 downloaded artifact hashes verified",
+      "Exact boot and DTBO flashed and read back with matching SHA256",
+      "Exact CI modules installed under /usr/lib/modules",
+      "Normal Ubuntu Touch lock screen verified by private Mir capture",
+      "SSH and LightDM, oFono and Android container active after more than eight minutes; no observed modem/ADSP fatal or invalid QRTR markers"
+    ],
+    "scope": "Existing prototype userdata and manual vendor; no userdata erase or clean installation"
+  }
 }

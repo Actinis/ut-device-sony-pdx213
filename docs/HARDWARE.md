@@ -1,7 +1,7 @@
 # XQ-BT52 hardware qualification
 
 Ubuntu Touch 24.04 Noble, native Android 11 adaptation and Sony 4.19 kernel.
-Results are from the working XQ-BT52 prototype, not from a newly flashed source-import build. No raw private logs or recordings are published. Other variants remain unqualified.
+The matrix describes the working XQ-BT52 prototype. The current source-vendor candidate has narrower qualification: exact CI kernel boot, native camera recording/stills and sampled SensorFW channels on existing userdata. See [candidate evidence](../evidence/vendor-device-candidate.json) and [CI kernel qualification](../evidence/kernel-boot-qualification.json). A complete clean-installed image is not yet qualified. No raw private logs or recordings are published. Other variants remain unqualified.
 
 | Component | Result and evidence |
 | --- | --- |

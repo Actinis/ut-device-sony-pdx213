@@ -68,7 +68,17 @@ The pinned recipe has completed a local source build: 733 projects and all
 17 patches were checked. The raw vendor image is 106,520,576 bytes and the
 sparse image is 56,123,504 bytes. Input/output hashes and the container identity
 are recorded in [the host evidence](../evidence/vendor-source-build.json).
-This does not claim bit-identical rebuilding or a successful phone boot.
+This does not claim bit-identical rebuilding. On the existing XQ-BT52 installation,
+the source candidate with the exact CI kernel/DTBO/modules and locked camera
+adaptation reaches the normal Ubuntu Touch lock screen. Native Qt recording and
+stop passed with 14.77 seconds of H264 1280x720 video and stereo AAC; both streams
+fully decoded. Main-camera 4000x3000 and front-camera 3264x2448 JPEGs also fully
+decoded in separate sequential native processes. SensorFW returned samples from
+accelerometer, gyroscope, magnetometer, light, proximity, rotation and compass.
+These results do not qualify the stock Camera application, same-process switching,
+sensor accuracy, calls, GNSS, NFC, Bluetooth or suspend on this candidate. Repeated
+reboot and long-duration qualification remain pending. See
+[device evidence](../evidence/vendor-device-candidate.json).
 
 Read-only comparison found all qualified vendor paths present, 285 file-content
 differences, unchanged symlink targets and 241 permission/ownership differences.
@@ -79,4 +89,6 @@ Their distribution terms must be resolved before approving a public vendor
 artifact; public Git hosting alone is not recorded as distribution approval.
 
 The qualified manual vendor remains the packaging input. The source candidate
-has not replaced it, been flashed, or been uploaded as a public binary.
+has not replaced it as a packaging input or been uploaded as a public binary.
+Runtime testing uses a reversible vendor-image substitution; the existing boot
+and userdata baseline is not a clean installation qualification.
