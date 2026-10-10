@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "variant": "XQ-BT52",
+  "slot": "a",
+  "status": "complete local candidate first setup and stock camera passed; public install release not approved",
+  "device_commit": "f4e7e17363c14126a8bd80e80153691f0434aa65",
+  "kernel_commit": "e2155c72658ab2d73a3c3e719b5ab2c4f36aa072",
+  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38079924323",
+  "build_id": "ci-38079924323-1",
+  "boot_sha256": "73c59518bcf167d69dd97cc9dc0369542b66987458b15d8b9cf0ee88dac18aea",
+  "userdata_sparse_sha256": "81b30caf530aff9612e48952704cb0aea089d6e4f703872a86af697610759f88",
+  "vendor_sha256": "5732d6940d564262579609b09e0130aea69ff24c51302325cf51b1d46d65ffeb",
+  "vendor_scope": "locked manual vendor; source-vendor qualification is separate",
+  "readback": {
+    "userdata": {
+      "sha256": "785c7503edfe587f824a25796caba50c725298fbf137c6185cfaf73f0812b575",
+      "bytes": 3221225472,
+      "readback_matches": true
+    },
+    "oem_a": {
+      "sha256": "98e658672719dce7366594f88ff6919c8b3fd0771d82c4ea6db4c18004744a21",
+      "bytes": 838860800,
+      "readback_matches": true
+    },
+    "dtbo_a": {
+      "sha256": "4cd187b380dc43027760da319b152b94f65c970d923fb7f391eb2cce778f7813",
+      "bytes": 244572,
+      "readback_matches": true
+    },
+    "vbmeta_a": {
+      "sha256": "180f57b63f4cf9ec577b346e3969b258af3d61fb14d119afe03290c4e44ab042",
+      "bytes": 256,
+      "readback_matches": true
+    },
+    "vbmeta_system_a": {
+      "sha256": "180f57b63f4cf9ec577b346e3969b258af3d61fb14d119afe03290c4e44ab042",
+      "bytes": 256,
+      "readback_matches": true
+    }
+  },
+  "passed": [
+    "All 42 exact CI artifacts verified against build report",
+    "Coherent offline backup compared with original filesystem and host restoration ext4 checked",
+    "OEM and userdata flashed as RAW sparse with 128-MiB transfer limit",
+    "Three-GiB seed expanded to actual userdata partition",
+    "Native setup wizard completed without modifying its completion state directly",
+    "Wi-Fi authenticated with credentials supplied after flashing",
+    "Stock Camera video recorded and stopped; main photo, same-process front-camera switch and front photo saved",
+    "Both JPEG images and full video/audio streams decoded",
+    "One normal systemd reboot returned to active LightDM/oFono/NetworkManager with automatic Wi-Fi reconnection and wizard completion retained"
+  ],
+  "camera": {
+    "video_duration_seconds": 14.613333,
+    "video_codec": "h264",
+    "video_dimensions": [
+      1080,
+      1080
+    ],
+    "audio_codec": "aac",
+    "sample_rate": 48000,
+    "channels": 2,
+    "jpeg_dimensions": [
+      [
+        3840,
+        2160
+      ],
+      [
+        2688,
+        1512
+      ]
+    ]
+  },
+  "diagnostic_scope": "Private key-only USB SSH service added to writable overlay after image readback; absent from release inputs",
+  "not_confirmed": [
+    "Complete stock Android restoration baseline",
+    "Interrupted-flash recovery on device and actual restoration to stock",
+    "Repeated cold boots and long-duration qualification",
+    "Full hardware and sleep/battery requalification on complete candidate",
+    "Source-vendor redistribution approval and full public CI image"
+  ],
+  "privacy": "No keys, passwords, screenshots, recordings, coordinates, network names, device identifiers or raw logs included"
+}

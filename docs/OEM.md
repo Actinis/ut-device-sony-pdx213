@@ -33,7 +33,12 @@ claimed. Both official sparse and decoded hashes are recorded in the lock.
 The FILL-to-RAW conversion was verified on the official image: decoded identity
 remains unchanged. The derived sparse image is 838,861,272 bytes with SHA256
 `decb705b78c0ec68d07f46e0e118f48f69edb11693bf312396ecd604c2d42dc5`.
-No independently downloaded OEM has been flashed in this qualification.
+The independently downloaded v9a OEM was flashed to oem_a on the XQ-BT52
+qualification device using RAW sparse chunks and a 128-MiB transfer limit. Its
+838,860,800 decoded bytes were read back before first boot and matched the lock.
+The complete local candidate reached the setup wizard and ran the stock Camera
+video/photo/front-camera scenario. This test retained the existing firmware
+baseline; it does not qualify installation after complete stock restoration.
 
 The final installation instructions must still qualify the exact stock
 firmware baseline and target OEM partition/slot on XQ-BT52. Logical file
