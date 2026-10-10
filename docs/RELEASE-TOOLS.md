@@ -55,3 +55,20 @@ The current manual vendor input and Sony OEM keep this bundle local. Public CI
 kernel/boot artifacts do not provide these inputs or qualify a complete stock-
 baseline installation. See [installation qualification](INSTALLATION-QUALIFICATION.md)
 and [vendor requirements](VENDOR.md).
+
+## Local source-vendor installation candidate
+
+`package_userdata.py` also accepts `--source-checkout` pointing to the clean
+exact commit recorded by the selected CI build. This keeps build identity
+checks intact when using a newer packaging utility. The assembly report records
+the SHA256 of that utility and its vendor-input verifier separately.
+
+To qualify a source-built vendor locally, provide `--vendor-build-report` and
+its explicitly reviewed `--vendor-build-report-sha256` alongside `--vendor`.
+The packager checks the image hash, manifest, Docker recipe, builder and full
+project/patch inventory against the locked recipe. The report identifies patched
+source commits and immutable container identity; it is not a reproducibility or
+licensing attestation. The assembly report binds the vendor identity and report
+pin to the resulting images. Without these explicit inputs the default remains
+the checksum-locked vendor. This local mode does not enable public full-image CI
+or imply hardware qualification or redistribution approval.

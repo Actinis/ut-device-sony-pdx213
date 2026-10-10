@@ -61,6 +61,7 @@ def candidate(build, repository, oem):
         'kernel_commit':lock['kernel']['commit'],'build_id':build.name,
         'lock_sha256':sha(lock_path),'build_report_sha256':sha(build/'out/build-report.json'),
         'assembly_report_sha256':sha(package/'assembly-report.json'),
+        'vendor':assembly.get('vendor',{'kind':'legacy-locked','sha256':lock['vendor']['sha256']}),
         'status':'experimental local installation candidate; clean-install qualification pending',
         'redistribution':'Not approved: vendor and user-obtained Sony OEM remain local',
         'images':{name:{'sha256':sha(path),'bytes':path.stat().st_size} for name,path in sorted(images.items())}}
