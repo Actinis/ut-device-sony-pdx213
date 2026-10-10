@@ -1,0 +1,17 @@
+diff --git a/src/binder_devmon_if.c b/src/binder_devmon_if.c
+index 695e309..06c8475 100644
+--- a/src/binder_devmon_if.c
++++ b/src/binder_devmon_if.c
+@@ -187,8 +187,10 @@ binder_devmon_if_io_set_indication_filter(
+          * IRadioNetwork.aidl:
+          * void setIndicationFilter(in int serial, in int indicationFilter);
+          */
+-        DBG_(self, "Setting indication filter: 0x%02x", api->ind_filter_all);
+-        gbinder_writer_append_int32(&args, api->ind_filter_all);
++        const RADIO_IND_FILTER value = self->display_on ?
++            api->ind_filter_all : RADIO_IND_FILTER_DATA_CALL_DORMANCY;
++        DBG_(self, "Setting indication filter: 0x%02x", value);
++        gbinder_writer_append_int32(&args, value);
+         radio_request_drop(self->req);
+         self->req = radio_request_try_submit(req);
+     }

@@ -74,6 +74,7 @@ def main():
     run('tar','--no-same-owner','-xf',downloads/lock['halium_gsi']['filename'],'-C',android)
     run(sys.executable,ROOT/'tools/build_gnss.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--output',out/'gnss')
     run(sys.executable,ROOT/'tools/build_nfc.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--work',build/'nfc','--output',out/'nfc','--downloads',downloads)
+    run(sys.executable,ROOT/'tools/build_ofono.py','--ndk',a.ndk,'--ubuntu-root',ubuntu,'--work',build/'ofono','--output',out/'ofono','--downloads',downloads,'--jobs',a.jobs)
     run(sys.executable,ROOT/'tools/build_repowerd.py','--ndk',a.ndk,'--ubuntu-root',ubuntu,'--work',build/'repowerd','--output',out/'repowerd','--downloads',downloads,'--jobs',a.jobs)
     extras=build/'boot-extras'
     run(sys.executable,ROOT/'tools/stage_boot_filesystem.py','--ubuntu-root',ubuntu,'--reboot-helper',out/'utxperia-reboot-bootloader','--output',extras)

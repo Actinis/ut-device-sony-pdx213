@@ -1,6 +1,6 @@
 # Locked inputs and build scope
 
-Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 6 is
+Only Ubuntu Touch 24.04 Noble is supported. `sources.lock.json` schema 7 is
 validated by `tools/sources_lock.py`, CI, the build and release metadata tool.
 `locked` means that the listed input identities are pinned, not that all inputs
 are downloadable or a complete installation has been reproduced.
@@ -94,3 +94,11 @@ its manifest, container recipe and builder. The AVB utility is checked both as
 its upstream base64 transport and decoded executable. See [VENDOR.md](VENDOR.md).
 The current manual vendor remains the only qualified packaging input; the new
 source recipe does not silently replace its hash or authorize redistribution.
+
+## Radio plugin
+
+The schema-7 `ofono` input pins the upstream source, matching UBports packaging
+commit and MTK C-source patch, screen-off fix, twelve ARM64 development packages,
+and seven link-time runtime libraries. All files under `device/ofono/` plus its
+builder are inventoried. The builder rejects changed runtime libraries and
+incomplete cached outputs. See [radio filtering](../device/ofono/README.md).

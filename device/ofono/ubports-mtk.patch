@@ -1,0 +1,53 @@
+From: TheKit <nekit1000@gmail.com>
+Date: Wed, 1 Jan 2020 23:10:00 +0200
+Subject: add hack to allow more than 1 active context on MTK
+
+[ratchanan@ubports.com: port the patch to ofono-binder-plugin]
+
+Origin: vendor
+Bug-UBports: https://gitlab.com/ubports/development/core/packaging/ofono-binder-plugin/-/issues/1
+Forwarded: not-needed
+---
+ src/binder_gprs.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/src/binder_gprs.c b/src/binder_gprs.c
+index c007246..149d5b2 100644
+--- a/src/binder_gprs.c
++++ b/src/binder_gprs.c
+@@ -199,8 +199,15 @@ binder_gprs_max_data_calls_changed(
+     BinderGprs* self = user_data;
+ 
+     if (net->max_data_calls > 0) {
+-        DBG_(self, "setting max cids to %d", net->max_data_calls);
+-        ofono_gprs_set_cid_range(self->gprs, 1, net->max_data_calls);
++        int max_data_calls = net->max_data_calls;
++
++        // Some MediaTek RILs support more than 1 active context on Android
++        // but report only 1 in response to getDataRegistrationState
++        if (max_data_calls == 1)
++            max_data_calls = 3;
++
++        DBG_(self, "setting max cids to %d", max_data_calls);
++        ofono_gprs_set_cid_range(self->gprs, 1, max_data_calls);
+     }
+ }
+ 
+@@ -256,8 +263,15 @@ binder_gprs_register(
+         network->data.status);
+ 
+     if (network->max_data_calls > 0) {
+-        DBG_(self, "setting max cids to %d", network->max_data_calls);
+-        ofono_gprs_set_cid_range(gprs, 1,network->max_data_calls);
++        int max_data_calls = network->max_data_calls;
++
++        // Some MediaTek RILs support more than 1 active context on Android
++        // but report only 1 in response to getDataRegistrationState
++        if (max_data_calls == 1)
++            max_data_calls = 3;
++
++        DBG_(self, "setting max cids to %d", max_data_calls);
++        ofono_gprs_set_cid_range(self->gprs, 1, max_data_calls);
+     }
+ 
+     ofono_gprs_register(gprs);

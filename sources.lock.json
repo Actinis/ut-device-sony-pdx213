@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "device": "sony-pdx213",
   "ubuntu_touch": "24.04",
   "status": "locked",
@@ -639,6 +639,21 @@
         "device/vendor/Dockerfile": "5afcbcb931c9ba8eb78f326d206eb6ddad8c39ffdbb1d9b036e16ab185cfbf33",
         "device/vendor/manifest.xml": "a8920fe5ac3c7ef07c31d844293e36ad9c049cb405f222d2918ce8940a8eb6ae",
         "tools/build_vendor.py": "8e5cf0c379208e55c43c64fc859aaa9aa232c269309ad83ce238f1fe11be5496"
+      }
+    },
+    "ofono": {
+      "kind": "derived",
+      "dependencies": [
+        "toolchain",
+        "rootfs"
+      ],
+      "description": "Pinned Noble radio plugin and UBports MTK source patch; restores display-dependent radio indication filtering.",
+      "files": {
+        "device/ofono/ubports-mtk.patch": "9cbe762398194745a62fb92ee22c3c68b00857a0ac2175d56831bf0e61288132",
+        "device/ofono/screen-off-filter.patch": "aaea4d227c9fecb3412e154add65472178020bb7a0273f007c024ebb5c70c293",
+        "device/ofono/inputs.json": "5116e1c0d635c45178b906505cb03495ab0ab915793344ffdc5977b4f17d0819",
+        "device/ofono/README.md": "0c2c1f2a079f3b422d405423970136e5580d3286941cc1b85a35f6b744a2198e",
+        "tools/build_ofono.py": "1d6db7615b9647a620f56d095ae543618efe651e987ecde7867ea17039e769fc"
       }
     }
   },

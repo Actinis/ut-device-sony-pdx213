@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "source": {
+    "url": "https://github.com/mer-hybris/ofono-binder-plugin.git",
+    "commit": "b926054213738d758d6e7dd7b8bc03c2fb113db1",
+    "version": "1.1.33"
+  },
+  "packaging": {
+    "url": "https://gitlab.com/ubports/development/core/packaging/ofono-binder-plugin.git",
+    "commit": "33c120acefc44334d1eea628a361d98c7f77759b",
+    "patch": "ubports-mtk.patch",
+    "patch_sha256": "9cbe762398194745a62fb92ee22c3c68b00857a0ac2175d56831bf0e61288132",
+    "original_path": "debian/patches/0006-add-hack-to-allow-more-than-1-active-context-on-MTK.patch"
+  },
+  "patch": {
+    "file": "screen-off-filter.patch",
+    "sha256": "aaea4d227c9fecb3412e154add65472178020bb7a0273f007c024ebb5c70c293",
+    "regression_commit": "aeb396b9c79cfa8aa1d838f5268fb324ca411bcb"
+  },
+  "development_packages": [
+    {
+      "name": "libc6-dev",
+      "version": "2.39-0ubuntu8",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/libc6-dev_2.39-0ubuntu8_arm64.deb",
+      "sha256": "cf8d2af040044ea5f9205a7a7a3eceabe9bc182fd780a1dac8e849f8eccee1f1",
+      "filename": "libc6-dev_2.39-0ubuntu8_arm64.deb"
+    },
+    {
+      "name": "libffi-dev",
+      "version": "3.4.6-1build1",
+      "filename": "libffi-dev_3.4.6-1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libf/libffi/libffi-dev_3.4.6-1build1_arm64.deb",
+      "sha256": "887755d6aa91c12ee0eb3404b61f6dc138c4c59234aa2add0264baf270337708"
+    },
+    {
+      "name": "libgbinder-dev",
+      "version": "1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libgbinder/libgbinder-dev_1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2_arm64.deb",
+      "sha256": "c4deeef7bbd3c92b064f783d4a50b7cac8ad5c313a1385a4c47dfa2a6d7ef759",
+      "filename": "libgbinder-dev_1.1.52-0ubports1~20260911100623.2~d4855b1+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libglib2.0-dev",
+      "version": "2.80.0-6ubuntu1",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glib2.0/libglib2.0-dev_2.80.0-6ubuntu1_arm64.deb",
+      "sha256": "232ce9efbecefbf80f464ae352f89f3b75f867ff6bfc38ea834b1ade9a50b580",
+      "filename": "libglib2.0-dev_2.80.0-6ubuntu1_arm64.deb"
+    },
+    {
+      "name": "libglibutil-dev",
+      "version": "1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2",
+      "url": "https://repo.ubports.com/pool/main/libg/libglibutil/libglibutil-dev_1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2_arm64.deb",
+      "sha256": "c599a5846f5206a42568d0d78c601a09adb38f4d4ee4740a44e6a05f84222fbd",
+      "filename": "libglibutil-dev_1.0.82-0ubports1~20260529000726.16~d2f43c4+ubports24.04.2_arm64.deb"
+    },
+    {
+      "name": "libpcre2-dev",
+      "version": "10.42-4ubuntu2",
+      "filename": "libpcre2-dev_10.42-4ubuntu2_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/p/pcre2/libpcre2-dev_10.42-4ubuntu2_arm64.deb",
+      "sha256": "e79fd5827b83a713236a6c99b94496276cdce8e2dc01d66e67b2a43ed9862b01"
+    },
+    {
+      "name": "linux-libc-dev",
+      "version": "6.8.0-31.31",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-libc-dev_6.8.0-31.31_arm64.deb",
+      "sha256": "7fd438efa44a794b438e7dde7ac280166fb8d4b1cf7846393ce019714d8bb3e3",
+      "filename": "linux-libc-dev_6.8.0-31.31_arm64.deb"
+    },
+    {
+      "name": "ofono-sailfish-dev",
+      "version": "1.29+git12-0ubports1~20260512073109.25~cc444e3+ubports24.04.2",
+      "filename": "ofono-sailfish-dev_1.29+git12-0ubports1~20260512073109.25~cc444e3+ubports24.04.2_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/o/ofono-sailfish/ofono-sailfish-dev_1.29+git12-0ubports1~20260512073109.25~cc444e3+ubports24.04.2_arm64.deb",
+      "sha256": "0448e4c10f22ebd29a40ed58d191359ad3e9900cae90e85d4a127a21246d46d7"
+    },
+    {
+      "name": "libgbinder-radio1-dev",
+      "version": "1.6.6-0ubports1~20260911145607.2~e294965+ubports24.04.2",
+      "filename": "libgbinder-radio1-dev_1.6.6-0ubports1~20260911145607.2~e294965+ubports24.04.2_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libg/libgbinder-radio/libgbinder-radio1-dev_1.6.6-0ubports1~20260911145607.2~e294965+ubports24.04.2_arm64.deb",
+      "sha256": "1b0782f8fac738360100cad5135ddf8647869c63a349f279007031745c444556"
+    },
+    {
+      "name": "libmce-glib-dev",
+      "version": "1.1.0+0~20260315055319.4+ubports24.04.2~1.gbpa77c5d",
+      "filename": "libmce-glib-dev_1.1.0+0~20260315055319.4+ubports24.04.2~1.gbpa77c5d_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libm/libmce-glib/libmce-glib-dev_1.1.0+0~20260315055319.4+ubports24.04.2~1.gbpa77c5d_arm64.deb",
+      "sha256": "12603bc201e49819113902765674def7c86831e55cd3b8461545a7c121ccc725"
+    },
+    {
+      "name": "libdbus-1-dev",
+      "version": "1.14.10-4ubuntu4",
+      "filename": "libdbus-1-dev_1.14.10-4ubuntu4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/d/dbus/libdbus-1-dev_1.14.10-4ubuntu4_arm64.deb",
+      "sha256": "1fa300a05822252e95f3bb7690e184080dc24891b96c27484a42662a873aa3ab"
+    },
+    {
+      "name": "libgcc-13-dev",
+      "version": "13.2.0-23ubuntu4",
+      "filename": "libgcc-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gcc-13/libgcc-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "sha256": "f8faa5fee7174ec5fdd3eecbc27f38d530f7b500ad6763e2b57a9ac88622dc37"
+    }
+  ],
+  "runtime_libraries": {
+    "libgbinder-radio.so.1": "9070cc03b8ba68cf5516d56ea531cdcf9720f67bb25bb3b4d052460d3ca1499c",
+    "libgbinder.so.1": "07a7d16b2750424a2d1ce6fb1e220aa91ecacf79a89bf1b8c8bb6af0234a313b",
+    "libmce-glib.so.1": "3135c092f9691a9db9b89976b66a08faa54527226bf56c333987a2eaff0fdcd7",
+    "libglibutil.so.1": "f3e32fe8ac69801a3a029ee82063752a9bfbafbef075323d2ceff87752708dc4",
+    "libgobject-2.0.so.0": "fe41448f7b832ffcb460035d5b92cfdd29125d2b45766e23774a33390d145d79",
+    "libglib-2.0.so.0": "75df2de8cef893e4ae32dd151eda7f4f23587fbb18d3c19cb33615d964db1ecd",
+    "libofonobinderpluginext.so.1": "84fdf237a5f10f753e05fd2150f02576d0cf46ee115520338a7809d06a946595"
+  },
+  "original_plugin_sha256": "6977a46e4c72d74fbc62135b28fb7f56b1da1d1cba2ba7afd92b457a280d20d8"
+}

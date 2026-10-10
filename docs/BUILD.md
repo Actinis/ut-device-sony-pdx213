@@ -101,3 +101,8 @@ normal build and saves `pdx213-noble-full-candidate.tar.gz`. It contains boot,
 DTBO, userdata, vbmeta and assembly/build/source metadata. Sony OEM is never
 bundled. The current manual vendor disables this stage; see [VENDOR.md](VENDOR.md)
 for its independent source-build recipe and promotion gates.
+
+The normal build also compiles the pinned oFono plugin in its own `ofono/`
+work directory. `out/ofono/binderplugin.so`, licence files and
+`ofono-build-report.json` are mandatory; clean-rootfs assembly installs the
+plugin and licences. No private device files or diagnostic probes are included.

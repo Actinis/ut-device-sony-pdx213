@@ -3,6 +3,27 @@
 import argparse, os, shutil, subprocess
 from pathlib import Path
 
+def install_ofono(root, output):
+    import json
+    from build_ofono import ROOT, artifact_hashes, sha
+    from sources_lock import validate_ofono_inputs
+    base=ROOT/'device/ofono'
+    inputs=validate_ofono_inputs(json.loads((base/'inputs.json').read_text()),base)
+    report=json.loads((output/'ofono-build-report.json').read_text())
+    identity=report.get('identity',{})
+    if identity.get('inputs_sha256')!=sha(base/'inputs.json') or identity.get('lock_sha256')!=sha(ROOT/'sources.lock.json') or identity.get('builder_sha256')!=sha(ROOT/'tools/build_ofono.py') or report.get('artifacts')!=artifact_hashes(output):
+        raise ValueError('oFono packaging identity/artifact mismatch')
+    candidates=list((root/'usr/lib/aarch64-linux-gnu').glob('ofono*/plugins/binderplugin.so'))
+    if len(candidates)!=1 or candidates[0].is_symlink() or sha(candidates[0])!=inputs['original_plugin_sha256']:
+        raise ValueError('Wrong distribution oFono plugin baseline')
+    dest=candidates[0]
+    shutil.copy2(output/'binderplugin.so',dest);os.chown(dest,0,0);dest.chmod(0o644)
+    licences=root/'usr/share/doc/utxperia-ofono'
+    licences.mkdir(parents=True,exist_ok=True)
+    for src in (output/'licences').iterdir():
+        dest=licences/src.name;shutil.copy2(src,dest);os.chown(dest,0,0)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True)
     p.add_argument('--artifacts',type=Path,required=True);a=p.parse_args()
@@ -26,6 +47,7 @@ def main():
     dest=root/'usr/local/libexec/utxperia-repowerd'
     dest.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(a.artifacts/'out/repowerd/repowerd',dest);os.chown(dest,0,0);dest.chmod(0o755)
+    install_ofono(root,a.artifacts/'out/ofono')
     from build_nfc import ARTIFACTS
     nfc=root/'usr/local/lib/utxperia/nfc'
     nfc.mkdir(parents=True,exist_ok=True)

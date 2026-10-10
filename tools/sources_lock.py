@@ -11,8 +11,8 @@ def validate(data, repository=None):
     need(data.get('status') == 'locked', 'Sources are not locked')
     sources=data.get('sources',{})
     schema=data.get('schema_version')
-    need(schema in (1,2,3,4,5,6),'Unknown lock schema')
-    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool'} if schema==6 else REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
+    need(schema in (1,2,3,4,5,6,7),'Unknown lock schema')
+    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool','ofono'} if schema==7 else REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool'} if schema==6 else REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
     for name, entry in sources.items():
         kind=entry.get('kind') if schema>=2 else 'git' if name=='kernel' else 'artifact'
         need(kind in ('git','artifact','manual','derived'),'Unknown source kind')
@@ -96,6 +96,17 @@ def validate(data, repository=None):
         name=archive.get('filename','')
         need(name and Path(name).name==name and name not in ('.','..') and bool(re.fullmatch('[0-9a-f]{64}',archive.get('sha256',''))),'Missing OEM archive identity')
         need(sources['avbtool'].get('kind')=='artifact' and sources['avbtool'].get('encoding')=='base64' and bool(re.fullmatch('[0-9a-f]{64}',sources['avbtool'].get('decoded_sha256',''))),'AVB utility must be checksum-pinned before and after decoding')
+    if schema >= 7:
+        entry = sources['ofono']
+        need(entry.get('kind') == 'derived' and set(entry.get('dependencies', [])) == {'toolchain', 'rootfs'}, 'Incomplete oFono dependencies')
+        need(bool(entry.get('files')), 'Missing oFono input inventory')
+        if repository:
+            import json
+            base = Path(repository) / 'device/ofono'
+            expected = {p.relative_to(repository).as_posix() for p in base.rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+            expected.add('tools/build_ofono.py')
+            need(set(entry['files']) == expected, 'Unpinned or stale oFono source inventory')
+            validate_ofono_inputs(json.loads((base / 'inputs.json').read_text()), base)
     return data
 
 
@@ -143,4 +154,33 @@ def validate_repowerd_inputs(data, root=None):
         need(bool(entry.get('version')) and str(entry.get('url','')).startswith('https://'),'Missing Repowerd package provenance')
         need(bool(re.fullmatch('[0-9a-f]{64}',entry.get('sha256',''))),'Unpinned Repowerd package')
         need(bool(name) and Path(name).name==name and name not in ('.','..') and entry['url'].endswith('/'+name),'Unsafe Repowerd package filename')
+    return data
+
+
+def validate_ofono_inputs(data, root=None):
+    def need(condition, message):
+        if not condition: raise ValueError(message)
+    need(data.get('schema_version') == 1, 'Unknown oFono input schema')
+    for key in ('source', 'packaging'):
+        entry = data.get(key, {})
+        need(str(entry.get('url', '')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}', entry.get('commit', ''))) and entry['commit'] != '0' * 40, 'Unpinned oFono source')
+    patch = data.get('patch', {})
+    packaging = data['packaging']
+    need(patch.get('file') == 'screen-off-filter.patch' and packaging.get('patch') == 'ubports-mtk.patch', 'Unsafe oFono patch path')
+    for name, checksum in ((patch['file'], patch.get('sha256', '')), (packaging['patch'], packaging.get('patch_sha256', ''))):
+        need(bool(re.fullmatch('[0-9a-f]{64}', checksum)), 'Missing oFono patch checksum')
+        if root: need(hashlib.sha256((Path(root) / name).read_bytes()).hexdigest() == checksum, 'oFono patch hash mismatch')
+    need(bool(re.fullmatch('[0-9a-f]{64}', data.get('original_plugin_sha256', ''))), 'Unpinned original oFono plugin')
+    packages = data.get('development_packages', [])
+    expected = {'libc6-dev', 'linux-libc-dev', 'libglib2.0-dev', 'libffi-dev', 'libpcre2-dev', 'libgbinder-dev', 'libglibutil-dev', 'ofono-sailfish-dev', 'libgbinder-radio1-dev', 'libmce-glib-dev', 'libdbus-1-dev', 'libgcc-13-dev'}
+    names = [entry.get('name') for entry in packages]
+    need(len(names) == len(expected) and set(names) == expected, 'Incomplete oFono development package inventory')
+    for entry in packages:
+        name = entry.get('filename', '')
+        need(bool(entry.get('version')) and str(entry.get('url', '')).startswith('https://'), 'Missing oFono package provenance')
+        need(bool(re.fullmatch('[0-9a-f]{64}', entry.get('sha256', ''))), 'Unpinned oFono package')
+        need(bool(name) and Path(name).name == name and name not in ('.', '..') and entry['url'].endswith('/' + name), 'Unsafe oFono package filename')
+    libraries = data.get('runtime_libraries', {})
+    need(set(libraries) == {'libgbinder-radio.so.1', 'libgbinder.so.1', 'libmce-glib.so.1', 'libglibutil.so.1', 'libgobject-2.0.so.0', 'libglib-2.0.so.0', 'libofonobinderpluginext.so.1'}, 'Incomplete oFono runtime inventory')
+    need(all(re.fullmatch('[0-9a-f]{64}', checksum) for checksum in libraries.values()), 'Unpinned oFono runtime library')
     return data
