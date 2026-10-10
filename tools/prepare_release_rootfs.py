@@ -42,6 +42,19 @@ def install_camera(root, output):
     shutil.copy2(output / 'licences/COPYING', licences / 'COPYING'); os.chown(licences / 'COPYING', 0, 0)
 
 
+def prepare_radio_state(root):
+    # ofonod drops privileges to radio and cannot recreate a missing state root.
+    # Keep subscriber-specific files out of images, but retain a writable empty
+    # directory so native oFono settings survive the next boot.
+    accounts={line.split(':')[0]:line.split(':') for line in (root/'etc/passwd').read_text().splitlines()}
+    radio=accounts['radio']
+    path=root/'var/lib/ofono'
+    if path.is_symlink():raise ValueError('Linked oFono state root rejected')
+    if path.exists():shutil.rmtree(path)
+    path.mkdir(parents=True,mode=0o700)
+    path.chmod(0o700);os.chown(path,int(radio[2]),int(radio[3]))
+
+
 def configure_services(root):
     for name in ['utxperia-wlan.service','utxperia-usb.service','utxperia-usb-mtp.timer','utxperia-firstboot.service','utxperia-tilt.service']:
         subprocess.run(['systemctl','--root',str(root),'enable',name],check=True)
@@ -109,9 +122,10 @@ def main():
         ('etc/systemd/user/default.target.wants','audiosystem-passthrough-qti.service','/usr/lib/systemd/user/audiosystem-passthrough-qti.service'),
         ('etc/systemd/user/pulseaudio.service.wants','utxperia-call-audio.service','/usr/lib/systemd/user/utxperia-call-audio.service')]:
         dest=root/directory/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.unlink(missing_ok=True);dest.symlink_to(target)
-    for name in ['root/.ssh','home/phablet/.ssh','etc/NetworkManager/system-connections','var/lib/NetworkManager','var/lib/ofono','var/lib/bluetooth','var/log/journal']:
+    for name in ['root/.ssh','home/phablet/.ssh','etc/NetworkManager/system-connections','var/lib/NetworkManager','var/lib/bluetooth','var/log/journal']:
         path=root/name
         if path.is_dir():shutil.rmtree(path)
+    prepare_radio_state(root)
     for path in (root/'etc/ssh').glob('ssh_host_*'):path.unlink()
     for name in ['etc/machine-id','var/lib/dbus/machine-id']:
         path=root/name;path.unlink(missing_ok=True)
