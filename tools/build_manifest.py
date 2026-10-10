@@ -12,6 +12,7 @@ REQUIRED_ARTIFACTS = {
     'gnss/libutxperia-gnss-assistance.so',
     'ofono/binderplugin.so', 'ofono/ofono-build-report.json', 'ofono/licences/LICENSE',
     'repowerd/repowerd', 'repowerd/repowerd-build-report.json',
+    'camera/libaalcamera.so', 'camera/camera-build-report.json', 'camera/fifo-cancel.log', 'camera/licences/COPYING',
     'nfc/nfcd', 'nfc/binder.so', 'nfc/libncicore.so.1',
     'nfc/libnciplugin.so.1', 'nfc/nfc_nci_nxp.so',
     'nfc/vendor.nxp.nxpese@1.0.so', 'nfc/nfc-build-report.json',

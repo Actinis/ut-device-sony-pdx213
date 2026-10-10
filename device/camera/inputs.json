@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "source": {
+    "url": "https://gitlab.com/ubports/development/core/hybris-support/qtubuntu-camera.git",
+    "commit": "a1674289b1da9129231ba100ab4474b59b5c834c",
+    "patch": "qt-microphone-start.patch",
+    "patch_sha256": "02a34bd6b53d3878d7fbb79e28bba9e72b418c06290194c4286c7ed86473b9e1"
+  },
+  "original_plugin_sha256": "2369e1826f59c982d452d55342ff3cb099834052f64b6cb9318f8d7fd513c69c",
+  "moc": {
+    "path": "usr/lib/qt5/bin/moc",
+    "version": "moc 5.15.13"
+  },
+  "development_packages": [
+    {
+      "name": "libandroid-properties-dev",
+      "version": "0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b",
+      "filename": "libandroid-properties-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libh/libhybris/libandroid-properties-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "sha256": "48e9b440f8218676b4aca015cfc68ff571d5bbec67fa99ba7e500c08e2da3e1d"
+    },
+    {
+      "name": "libc6-dev",
+      "version": "2.39-0ubuntu8",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/libc6-dev_2.39-0ubuntu8_arm64.deb",
+      "sha256": "cf8d2af040044ea5f9205a7a7a3eceabe9bc182fd780a1dac8e849f8eccee1f1",
+      "filename": "libc6-dev_2.39-0ubuntu8_arm64.deb"
+    },
+    {
+      "name": "libdeviceinfo-dev",
+      "version": "0.2.4+0~20260329172905.22+ubports24.04.2~1.gbp84bff0",
+      "filename": "libdeviceinfo-dev_0.2.4+0~20260329172905.22+ubports24.04.2~1.gbp84bff0_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/d/deviceinfo/libdeviceinfo-dev_0.2.4+0~20260329172905.22+ubports24.04.2~1.gbp84bff0_arm64.deb",
+      "sha256": "cb799d55462edc81bc3f1adc6ae0d6722b7375ec6f59a02d97a6f0bd38ffbff4"
+    },
+    {
+      "name": "libgcc-13-dev",
+      "version": "13.2.0-23ubuntu4",
+      "filename": "libgcc-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gcc-13/libgcc-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "sha256": "f8faa5fee7174ec5fdd3eecbc27f38d530f7b500ad6763e2b57a9ac88622dc37"
+    },
+    {
+      "name": "libhybris-common-dev",
+      "version": "0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b",
+      "filename": "libhybris-common-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libh/libhybris/libhybris-common-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "sha256": "a7a604a32f5aa3e5ea79f6bda25613d20e89829290531e716c61e905e1aefd0c"
+    },
+    {
+      "name": "libhybris-dev",
+      "version": "0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b",
+      "filename": "libhybris-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libh/libhybris/libhybris-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "sha256": "7e5ebbf68af074936d6d9586e20dc4e9146cd7ec64cc45666c499b22afa116dd"
+    },
+    {
+      "name": "libstdc++-13-dev",
+      "version": "13.2.0-23ubuntu4",
+      "filename": "libstdc++-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gcc-13/libstdc++-13-dev_13.2.0-23ubuntu4_arm64.deb",
+      "sha256": "30707afa137c328dd99c76e752068f144b124b655f4ddc649d42931e48b1acd4"
+    },
+    {
+      "name": "linux-libc-dev",
+      "version": "6.8.0-31.31",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-libc-dev_6.8.0-31.31_arm64.deb",
+      "sha256": "7fd438efa44a794b438e7dde7ac280166fb8d4b1cf7846393ce019714d8bb3e3",
+      "filename": "linux-libc-dev_6.8.0-31.31_arm64.deb"
+    },
+    {
+      "name": "libmedia-dev",
+      "version": "0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b",
+      "filename": "libmedia-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/libh/libhybris/libmedia-dev_0.1.0+git20250630+0cedf90-0ubports2+0~20260911145803.1+ubports24.04.2~1.gbp61f88b_arm64.deb",
+      "sha256": "ca677d6489c254b66f5e8291af86023a8fb50127afe77437652188d09f583229"
+    },
+    {
+      "name": "libqtubuntu-media-signals-dev",
+      "version": "0.3+15.10.20150710-0ubuntu2ubports0+0~20260315202938.12+ubports24.04.2~1.gbp407f73",
+      "filename": "libqtubuntu-media-signals-dev_0.3+15.10.20150710-0ubuntu2ubports0+0~20260315202938.12+ubports24.04.2~1.gbp407f73_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/q/qtubuntu-media-signals/libqtubuntu-media-signals-dev_0.3+15.10.20150710-0ubuntu2ubports0+0~20260315202938.12+ubports24.04.2~1.gbp407f73_arm64.deb",
+      "sha256": "69fa3dc6fd3659acfe202384082c9fb4e35b5a6a955de9ed8c26807f26066d54"
+    },
+    {
+      "name": "android-headers-19",
+      "version": "30.0ubports1+0~20260308210709.4+ubports24.04.2~1.gbpcc4f98",
+      "filename": "android-headers-19_30.0ubports1+0~20260308210709.4+ubports24.04.2~1.gbpcc4f98_all.deb",
+      "url": "https://repo.ubports.com/pool/main/a/android-headers/android-headers-19_30.0ubports1+0~20260308210709.4+ubports24.04.2~1.gbpcc4f98_all.deb",
+      "sha256": "15769d678c94768487d17ed8b4d2e033e98767cf1899bf9113f9324e993b3ec9"
+    },
+    {
+      "name": "libpulse-dev",
+      "version": "1:16.1+dfsg1-2ubuntu10.1ubports1+0~20261008092456.3+ubports24.04.2~1.gbpe0c6e8",
+      "filename": "libpulse-dev_16.1+dfsg1-2ubuntu10.1ubports1+0~20261008092456.3+ubports24.04.2~1.gbpe0c6e8_arm64.deb",
+      "url": "https://repo.ubports.com/pool/main/p/pulseaudio/libpulse-dev_16.1+dfsg1-2ubuntu10.1ubports1+0~20261008092456.3+ubports24.04.2~1.gbpe0c6e8_arm64.deb",
+      "sha256": "5739f8adc03d163b54a9dd0980e070796becc2874d02163de84f8feb267394e7"
+    },
+    {
+      "name": "libexiv2-dev",
+      "version": "0.27.6-1ubuntu0.3",
+      "filename": "libexiv2-dev_0.27.6-1ubuntu0.3_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/e/exiv2/libexiv2-dev_0.27.6-1ubuntu0.3_arm64.deb",
+      "sha256": "6404f9a1a2a2fc4567d92124811824030226b7aa8c6ed8654f63801d97030056"
+    },
+    {
+      "name": "qtbase5-dev",
+      "version": "5.15.13+dfsg-1ubuntu1",
+      "filename": "qtbase5-dev_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/universe/q/qtbase-opensource-src/qtbase5-dev_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "sha256": "ac55917652f7f4611a1915387a0655e33b52f51e30a08322e729d0b05dec49a7"
+    },
+    {
+      "name": "qtbase5-dev-tools",
+      "version": "5.15.13+dfsg-1ubuntu1",
+      "filename": "qtbase5-dev-tools_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/universe/q/qtbase-opensource-src/qtbase5-dev-tools_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "sha256": "282bbdd7b063cbda16f3595ef9142289f481ebcb6a7c34d680e47131859d5522"
+    },
+    {
+      "name": "libqt5opengl5-dev",
+      "version": "5.15.13+dfsg-1ubuntu1",
+      "filename": "libqt5opengl5-dev_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/universe/q/qtbase-opensource-src/libqt5opengl5-dev_5.15.13+dfsg-1ubuntu1_arm64.deb",
+      "sha256": "cc47aa023526dcdb75b28cc7a3fa1c0884fadc1e1f9a3ca56f241a37c4f8ddc4"
+    },
+    {
+      "name": "qtmultimedia5-dev",
+      "version": "5.15.13-1",
+      "filename": "qtmultimedia5-dev_5.15.13-1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/universe/q/qtmultimedia-opensource-src/qtmultimedia5-dev_5.15.13-1_arm64.deb",
+      "sha256": "3f2277c111bbefcaaa6cf789f189205e8b327b2e7ffac369d42529bf50c6e13f"
+    },
+    {
+      "name": "libqt5sensors5-dev",
+      "version": "5.15.13-1",
+      "filename": "libqt5sensors5-dev_5.15.13-1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/universe/q/qtsensors-opensource-src/libqt5sensors5-dev_5.15.13-1_arm64.deb",
+      "sha256": "5471b94d4a054ba0f28ba50628eb0b704c084d3b9bb48b67567f30c7a4fd57a0"
+    },
+    {
+      "name": "libegl-dev",
+      "version": "1.7.0-1build1",
+      "filename": "libegl-dev_1.7.0-1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libg/libglvnd/libegl-dev_1.7.0-1build1_arm64.deb",
+      "sha256": "99e364f5b5d5847feeb57bf4bd866331da93f16ba767c25286dd7f65e4b828ec"
+    },
+    {
+      "name": "libgles-dev",
+      "version": "1.7.0-1build1",
+      "filename": "libgles-dev_1.7.0-1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libg/libglvnd/libgles-dev_1.7.0-1build1_arm64.deb",
+      "sha256": "df742afc0b66f24d80920b419723e072ab59d70726519d5994f50cf09e1f3961"
+    },
+    {
+      "name": "libgl-dev",
+      "version": "1.7.0-1build1",
+      "filename": "libgl-dev_1.7.0-1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libg/libglvnd/libgl-dev_1.7.0-1build1_arm64.deb",
+      "sha256": "9bc28c1265bb82ff2498c234893cbb891529e43fa6b100c007ba677c0a77bbc1"
+    },
+    {
+      "name": "libglvnd-dev",
+      "version": "1.7.0-1build1",
+      "filename": "libglvnd-dev_1.7.0-1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libg/libglvnd/libglvnd-dev_1.7.0-1build1_arm64.deb",
+      "sha256": "fdf1e75a3e11572e4cf3c9a6cac055f9928456a0fd746da7b790b89908c89751"
+    }
+  ]
+}

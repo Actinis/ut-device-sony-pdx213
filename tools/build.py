@@ -19,6 +19,7 @@ def main():
     for name in ['kernel-source','ndk','mkbootimg-source']:p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--build-id',required=True)
     p.add_argument('--debugfs',type=Path,required=True,help='Host e2fsprogs debugfs executable')
+    p.add_argument('--qemu-aarch64',type=Path,default=Path(shutil.which('qemu-aarch64') or 'qemu-aarch64'),help='ARM64 interpreter for the locked Qt generator and cancellation check')
     p.add_argument('--jobs',type=int,default=4)
     p.add_argument('--fetch-inputs',action='store_true')
     p.add_argument('--resume',action='store_true',help='Resume only the same source/input build in its existing output directory')
@@ -81,6 +82,7 @@ def main():
     run(sys.executable,ROOT/'tools/build_nfc.py','--ndk',a.ndk,'--android-image',android/'system/var/lib/lxc/android/android-rootfs.img','--ubuntu-root',ubuntu,'--debugfs',a.debugfs,'--work',build/'nfc','--output',out/'nfc','--downloads',downloads)
     run(sys.executable,ROOT/'tools/build_ofono.py','--ndk',a.ndk,'--ubuntu-root',ubuntu,'--work',build/'ofono','--output',out/'ofono','--downloads',downloads,'--jobs',a.jobs)
     run(sys.executable,ROOT/'tools/build_repowerd.py','--ndk',a.ndk,'--ubuntu-root',ubuntu,'--work',build/'repowerd','--output',out/'repowerd','--downloads',downloads,'--jobs',a.jobs)
+    run(sys.executable,ROOT/'tools/build_camera.py','--ndk',a.ndk,'--ubuntu-root',ubuntu,'--work',build/'camera','--output',out/'camera','--downloads',downloads,'--qemu-aarch64',a.qemu_aarch64,'--jobs',a.jobs)
     extras=build/'boot-extras'
     run(sys.executable,ROOT/'tools/stage_boot_filesystem.py','--ubuntu-root',ubuntu,'--reboot-helper',out/'utxperia-reboot-bootloader','--output',extras)
     run(sys.executable,ROOT/'tools/build_standalone_boot.py','--base',downloads/lock['initrd']['filename'],'--kernel',out/'Image.gz-dtb','--metadata',ROOT/'device/boot-metadata.json','--init',ROOT/'device/release-init','--extras',extras,'--mkbootimg',a.mkbootimg_source/'mkbootimg.py','--output',out/'boot.img')

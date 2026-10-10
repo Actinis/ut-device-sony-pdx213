@@ -82,7 +82,8 @@ jobs:
           python3 tools/build.py --kernel-source "$GITHUB_WORKSPACE/kernel" \
             --mkbootimg-source "$GITHUB_WORKSPACE/mkbootimg" \
             --ndk "$UT_PORTS_DATA_DIR/toolchains/android-ndk-r23b" \
-            --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs --debugfs /usr/sbin/debugfs
+            --build-id "ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --jobs 4 --fetch-inputs --debugfs /usr/sbin/debugfs \
+            --qemu-aarch64 /usr/bin/qemu-aarch64
       - name: Assemble reviewed full userdata candidate
         if: steps.pins.outputs.full_image == 'true'
         run: |

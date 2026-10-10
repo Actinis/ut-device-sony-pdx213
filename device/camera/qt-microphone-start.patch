@@ -1,0 +1,86 @@
+diff --git a/src/aalmediarecordercontrol.cpp b/src/aalmediarecordercontrol.cpp
+index 99a8f3a..249465b 100644
+--- a/src/aalmediarecordercontrol.cpp
++++ b/src/aalmediarecordercontrol.cpp
+@@ -488,6 +488,11 @@ int AalMediaRecorderControl::startRecording()
+     setStatus(QMediaRecorder::LoadedStatus);
+     setStatus(QMediaRecorder::StartingStatus);
+ 
++    // Start from the Qt thread before Android start blocks waiting for audio.
++    // The worker opens micshm when the Android reader becomes available.
++    if (m_audioCaptureAvailable)
++        startAudioCaptureThread();
++
+     // state prepared
+     ret = android_recorder_start(m_mediaRecorder);
+     if (ret < 0) {
+@@ -576,8 +581,7 @@ void AalMediaRecorderControl::setParameter(const QString &parameter, int value)
+ 
+ void AalMediaRecorderControl::recorderReadAudioCallback(void *context)
+ {
+-    AalMediaRecorderControl *thiz = static_cast<AalMediaRecorderControl*>(context);
+-    if (thiz != NULL) {
+-        thiz->startAudioCaptureThread();
+-    }
++    // Android's protected Binder frame must not initialize Qt thread-local data.
++    // The microphone worker is already started by the owning Qt thread.
++    Q_UNUSED(context);
+ }
+diff --git a/src/audiocapture.cpp b/src/audiocapture.cpp
+index d167307..7fd5418 100644
+--- a/src/audiocapture.cpp
++++ b/src/audiocapture.cpp
+@@ -71,7 +71,6 @@ void AudioCapture::stopCapture()
+  */
+ void AudioCapture::run()
+ {
+-    m_flagExit = false;
+     qDebug() << __PRETTY_FUNCTION__;
+ 
+     int bytesWritten = 0, bytesRead = 0;
+@@ -186,7 +185,23 @@ bool AudioCapture::setupPipe()
+     }
+ 
+     // Open the named pipe for writing only
+-    m_audioPipe = open("/dev/socket/micshm", O_WRONLY);
++    // Before Android start, the reader may not exist yet. Keep startup
++    // cancellable so a failed recorder start cannot strand teardown in wait().
++    while (!m_flagExit.load()) {
++        m_audioPipe = open("/dev/socket/micshm", O_WRONLY | O_NONBLOCK);
++        if (m_audioPipe >= 0)
++            break;
++        if (errno != ENXIO && errno != EINTR)
++            break;
++        QThread::msleep(10);
++    }
++    if (m_audioPipe >= 0) {
++        int flags = fcntl(m_audioPipe, F_GETFL);
++        if (flags < 0 || fcntl(m_audioPipe, F_SETFL, flags & ~O_NONBLOCK) < 0) {
++            close(m_audioPipe);
++            m_audioPipe = -1;
++        }
++    }
+     if (m_audioPipe < 0)
+     {
+         qWarning() << "Failed to open audio data pipe /dev/socket/micshm: " << strerror(errno);
+diff --git a/src/audiocapture.h b/src/audiocapture.h
+index ae01f6e..61bca90 100644
+--- a/src/audiocapture.h
++++ b/src/audiocapture.h
+@@ -22,6 +22,7 @@
+ #include <hybris/media/media_recorder_layer.h>
+ 
+ #include <stdint.h>
++#include <atomic>
+ 
+ #include <QObject>
+ 
+@@ -60,7 +61,7 @@ private:
+     int16_t m_audioBuf[MIC_READ_BUF_SIZE];
+ 
+     int m_audioPipe;
+-    bool m_flagExit;
++    std::atomic_bool m_flagExit;
+     MediaRecorderWrapper *m_mediaRecorder;
+ };
+ 

@@ -24,6 +24,24 @@ def install_ofono(root, output):
         dest=licences/src.name;shutil.copy2(src,dest);os.chown(dest,0,0)
 
 
+def install_camera(root, output):
+    import json
+    from build_camera import ROOT, artifacts, sha
+    from sources_lock import validate_camera_inputs
+    base = ROOT / 'device/camera'
+    inputs = validate_camera_inputs(json.loads((base / 'inputs.json').read_text()), base)
+    report = json.loads((output / 'camera-build-report.json').read_text())
+    identity = report.get('identity', {})
+    if identity.get('inputs_sha256') != sha(base / 'inputs.json') or identity.get('lock_sha256') != sha(ROOT / 'sources.lock.json') or identity.get('builder_sha256') != sha(ROOT / 'tools/build_camera.py') or report.get('artifacts') != artifacts(output):
+        raise ValueError('Camera packaging identity/artifact mismatch')
+    dest = root / 'usr/lib/aarch64-linux-gnu/qt5/plugins/mediaservice/libaalcamera.so'
+    if dest.is_symlink() or not dest.is_file() or sha(dest) != inputs['original_plugin_sha256']:
+        raise ValueError('Wrong distribution camera plugin baseline')
+    shutil.copy2(output / 'libaalcamera.so', dest); os.chown(dest, 0, 0); dest.chmod(0o644)
+    licences = root / 'usr/share/doc/utxperia-camera'; licences.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(output / 'licences/COPYING', licences / 'COPYING'); os.chown(licences / 'COPYING', 0, 0)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True)
     p.add_argument('--artifacts',type=Path,required=True);a=p.parse_args()
@@ -48,6 +66,7 @@ def main():
     dest.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(a.artifacts/'out/repowerd/repowerd',dest);os.chown(dest,0,0);dest.chmod(0o755)
     install_ofono(root,a.artifacts/'out/ofono')
+    install_camera(root,a.artifacts/'out/camera')
     from build_nfc import ARTIFACTS
     nfc=root/'usr/local/lib/utxperia/nfc'
     nfc.mkdir(parents=True,exist_ok=True)

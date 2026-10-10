@@ -1,5 +1,5 @@
 {
-  "schema_version": 7,
+  "schema_version": 8,
   "device": "sony-pdx213",
   "ubuntu_touch": "24.04",
   "status": "locked",
@@ -656,6 +656,21 @@
         "device/ofono/inputs.json": "5116e1c0d635c45178b906505cb03495ab0ab915793344ffdc5977b4f17d0819",
         "device/ofono/README.md": "0c2c1f2a079f3b422d405423970136e5580d3286941cc1b85a35f6b744a2198e",
         "tools/build_ofono.py": "1d6db7615b9647a620f56d095ae543618efe651e987ecde7867ea17039e769fc"
+      }
+    },
+    "camera": {
+      "kind": "derived",
+      "description": "Qt microphone-worker startup from the owning thread with cancellable FIFO acquisition",
+      "dependencies": [
+        "toolchain",
+        "rootfs"
+      ],
+      "files": {
+        "device/camera/README.md": "f7d596946f660b8ccd9391a35bf764284d84ffb2a6edd6dafdb03ebcb9a2b32c",
+        "device/camera/fifo-cancel.cpp": "f7401562e5f269fb5075fe0608ce5a87595967b453e0be1190ef047c23154cec",
+        "device/camera/inputs.json": "a68c48f34287e7eda31b6be7a22ba6d7aaacbc644154d29e6a6a6a4433eed771",
+        "device/camera/qt-microphone-start.patch": "02a34bd6b53d3878d7fbb79e28bba9e72b418c06290194c4286c7ed86473b9e1",
+        "tools/build_camera.py": "3f1481fcb2ca9d767f57e4e762149befc835f278c9c543f9a79445e70d1d98bc"
       }
     }
   },

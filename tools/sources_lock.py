@@ -11,8 +11,8 @@ def validate(data, repository=None):
     need(data.get('status') == 'locked', 'Sources are not locked')
     sources=data.get('sources',{})
     schema=data.get('schema_version')
-    need(schema in (1,2,3,4,5,6,7),'Unknown lock schema')
-    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool','ofono'} if schema==7 else REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool'} if schema==6 else REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
+    need(schema in (1,2,3,4,5,6,7,8),'Unknown lock schema')
+    need(set(sources) == (REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool','ofono'} | ({'camera'} if schema == 8 else set()) if schema>=7 else REQUIRED | {'gnss','nfc','repowerd','vendor_recipe','repo_tool','avbtool'} if schema==6 else REQUIRED | {'gnss','nfc','repowerd'} if schema==5 else REQUIRED | {'gnss','nfc'} if schema==4 else REQUIRED | {'gnss'} if schema==3 else REQUIRED if schema>=2 else {'kernel','rootfs','halium_gsi','toolchain'}),'Complete source inventory required')
     for name, entry in sources.items():
         kind=entry.get('kind') if schema>=2 else 'git' if name=='kernel' else 'artifact'
         need(kind in ('git','artifact','manual','derived'),'Unknown source kind')
@@ -107,6 +107,16 @@ def validate(data, repository=None):
             expected.add('tools/build_ofono.py')
             need(set(entry['files']) == expected, 'Unpinned or stale oFono source inventory')
             validate_ofono_inputs(json.loads((base / 'inputs.json').read_text()), base)
+    if schema >= 8:
+        entry = sources['camera']
+        need(entry.get('kind') == 'derived' and set(entry.get('dependencies', [])) == {'toolchain', 'rootfs'}, 'Incomplete camera dependencies')
+        if repository:
+            import json
+            base = Path(repository) / 'device/camera'
+            expected = {p.relative_to(repository).as_posix() for p in base.rglob('*') if p.is_file() and '__pycache__' not in p.parts}
+            expected.add('tools/build_camera.py')
+            need(set(entry.get('files', {})) == expected, 'Incomplete camera source inventory')
+            validate_camera_inputs(json.loads((base / 'inputs.json').read_text()), base)
     return data
 
 
@@ -183,4 +193,26 @@ def validate_ofono_inputs(data, root=None):
     libraries = data.get('runtime_libraries', {})
     need(set(libraries) == {'libgbinder-radio.so.1', 'libgbinder.so.1', 'libmce-glib.so.1', 'libglibutil.so.1', 'libgobject-2.0.so.0', 'libglib-2.0.so.0', 'libofonobinderpluginext.so.1'}, 'Incomplete oFono runtime inventory')
     need(all(re.fullmatch('[0-9a-f]{64}', checksum) for checksum in libraries.values()), 'Unpinned oFono runtime library')
+    return data
+
+
+def validate_camera_inputs(data, root=None):
+    def need(condition, message):
+        if not condition: raise ValueError(message)
+    need(data.get('schema_version') == 1, 'Unknown camera input schema')
+    source = data.get('source', {})
+    need(str(source.get('url', '')).startswith('https://') and bool(re.fullmatch('[0-9a-f]{40}', source.get('commit', ''))) and source['commit'] != '0' * 40, 'Unpinned camera source')
+    need(source.get('patch') == 'qt-microphone-start.patch' and bool(re.fullmatch('[0-9a-f]{64}', source.get('patch_sha256', ''))), 'Unpinned camera patch')
+    if root: need(hashlib.sha256((Path(root) / source['patch']).read_bytes()).hexdigest() == source['patch_sha256'], 'Camera patch hash mismatch')
+    need(bool(re.fullmatch('[0-9a-f]{64}', data.get('original_plugin_sha256', ''))), 'Unpinned camera distribution baseline')
+    need(data.get('moc') == {'path': 'usr/lib/qt5/bin/moc', 'version': 'moc 5.15.13'}, 'Unpinned or unsafe Qt generator')
+    packages = data.get('development_packages', [])
+    expected = {'libstdc++-13-dev', 'libqt5sensors5-dev', 'libegl-dev', 'libpulse-dev', 'libhybris-dev', 'libglvnd-dev', 'libgcc-13-dev', 'qtmultimedia5-dev', 'libqt5opengl5-dev', 'libhybris-common-dev', 'libmedia-dev', 'libqtubuntu-media-signals-dev', 'libdeviceinfo-dev', 'android-headers-19', 'libandroid-properties-dev', 'libexiv2-dev', 'libgl-dev', 'qtbase5-dev-tools', 'qtbase5-dev', 'libgles-dev', 'linux-libc-dev', 'libc6-dev'}
+    names = [entry.get('name') for entry in packages]
+    need(len(names) == len(expected) and set(names) == expected, 'Incomplete camera development package inventory')
+    for entry in packages:
+        name = entry.get('filename', '')
+        need(bool(entry.get('version')) and str(entry.get('url', '')).startswith('https://'), 'Missing camera package provenance')
+        need(bool(re.fullmatch('[0-9a-f]{64}', entry.get('sha256', ''))), 'Unpinned camera package')
+        need(bool(name) and Path(name).name == name and name not in ('.', '..') and entry['url'].endswith('/' + name), 'Unsafe camera package filename')
     return data
