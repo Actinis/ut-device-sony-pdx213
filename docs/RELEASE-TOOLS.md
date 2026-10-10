@@ -23,3 +23,35 @@ Do not run this example until placeholders, pins, installation instructions and 
 `publish_ci_release.py` implements the verified CI publication path described in [RELEASING.md](RELEASING.md). It reads the original run's exact lock and verifies its archived build identity before preparing assets. It does not use this checkout's dependency pins to relabel an older build.
 
 The earlier `release_metadata.py` remains a local reviewed-image tool; it is not used to publish CI kernel/boot results. Automated development releases use a UT-series/daily-build tag, while version tags retain the port-version convention.
+
+## Local terminal-flashing candidate
+
+`tools/prepare_install_bundle.py` binds an assembled userdata to the exact clean
+source checkout, build ID, source lock, complete kernel/helper/module report and
+Sony OEM decoded identity. It rejects stale userdata, missing results, changed
+images, linked inputs and Sony-incompatible FILL chunks. It never downloads,
+flashes or publishes. The output contains concrete slot-A fastboot commands,
+checksums and a manifest; it is a local candidate, not redistribution approval.
+
+```sh
+export UT_PORTS_DATA_DIR=/path/to/ut-ports-data
+python3 tools/prepare_install_bundle.py \
+  --source-checkout /path/to/exact-device-checkout \
+  --build-id BUILD_ID \
+  --oem-fastboot-image /path/to/owner-obtained-oem-raw-sparse.img \
+  --output "$UT_PORTS_DATA_DIR/private/pdx213/local-install-bundle" \
+  --hardlink
+```
+
+Use a clean checkout of the commit recorded by `out/build-report.json`, including
+when the current branch has newer documentation. The userdata package must have
+been assembled from that exact build. `--hardlink` avoids duplicate multi-GiB
+images on the same filesystem; otherwise files are copied. Never change the
+source images after preparing the bundle. Sony OEM must first pass
+`tools/verify_sony_oem.py` with `--fastboot-output`; accepting equal decoded bytes
+alone would overlook the bootloader's FILL-chunk limitation.
+
+The current manual vendor input and Sony OEM keep this bundle local. Public CI
+kernel/boot artifacts do not provide these inputs or qualify a complete stock-
+baseline installation. See [installation qualification](INSTALLATION-QUALIFICATION.md)
+and [vendor requirements](VENDOR.md).
