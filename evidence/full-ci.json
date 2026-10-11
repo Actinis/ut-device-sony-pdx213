@@ -1,0 +1,13 @@
+{
+  "device_commit": "121a08a1b36568d5d68d28e11818b26a22b326c3",
+  "build_id": "ci-38096461145-1",
+  "ci_run": "https://github.com/Actinis/ut-device-sony-pdx213/actions/runs/38096461145",
+  "scope": "Downloaded independent GitHub-hosted full-image assembly; no phone flash or hardware qualification of these exact bytes",
+  "archive_sha256": "f5f0368190edfe50b18febf9cf87987dc7d6cc23c57b11f63970d88f43a2e317",
+  "archive_bytes": 1034711641,
+  "checksum_entries_verified": 11,
+  "kernel_artifacts_verified": 42,
+  "vendor_sha256": "d1ae38735f050179af836aa9271b8d6e61cab63058012a8c675586dea35177f4",
+  "vendor_report_sha256": "abf447c6a746ce364bd9aa4643514083452ac195b8d5fe3947dfbf094ccf2bc9",
+  "oem_excluded": true
+}

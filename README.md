@@ -42,3 +42,8 @@ NFC build inputs, supported operations and explicit qualification gaps:
 Double-tap wake control and qualification: [touch wake](docs/TOUCH.md).
 
 Experimental lift wake integration and qualification: [Raise to wake](device/repowerd/README.md).
+
+The [full CI verification report](evidence/full-ci.json) confirms independent
+GitHub-hosted assembly and verification of the downloaded boot, DTBO, userdata
+and vbmeta candidate. Sony OEM is excluded. This is build evidence; these exact
+CI images have not yet been qualified by flashing them to a phone.
